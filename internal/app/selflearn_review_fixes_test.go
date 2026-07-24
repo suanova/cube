@@ -35,12 +35,12 @@ func TestFailedEvolveResultDoesNotRequestSelfLearn(t *testing.T) {
 func TestSelfLearnCapabilitiesHonorHardDisable(t *testing.T) {
 	m := &model{services: services{Setting: &setting.Settings{}}}
 
-	t.Setenv("SAN_DISABLE_SELF_LEARN", "")
+	t.Setenv("CUBE_DISABLE_SELF_LEARN", "")
 	if caps := m.selfLearnCapabilities(); !caps.Active() {
 		t.Fatal("default skill permissions should advertise Evolve")
 	}
 
-	t.Setenv("SAN_DISABLE_SELF_LEARN", "1")
+	t.Setenv("CUBE_DISABLE_SELF_LEARN", "1")
 	if caps := m.selfLearnCapabilities(); caps.Active() {
 		t.Fatalf("hard-disabled self-learning advertised Evolve: %+v", caps)
 	}
@@ -51,7 +51,7 @@ func TestSelfLearnCapabilitiesRejectInvalidSettings(t *testing.T) {
 	cwd := t.TempDir()
 	t.Setenv("HOME", home)
 	t.Setenv("USERPROFILE", home)
-	writeTestFile(t, filepath.Join(cwd, ".san", "settings.json"),
+	writeTestFile(t, filepath.Join(cwd, ".cube", "settings.json"),
 		`{"selfLearn":{"skills":{"enabled":true,"denyUpdate":true}}}`)
 
 	settings := &setting.Settings{}
@@ -69,9 +69,9 @@ func TestNotifySelfLearnOverrideChecksIndividualSkillActions(t *testing.T) {
 	cwd := t.TempDir()
 	t.Setenv("HOME", home)
 	t.Setenv("USERPROFILE", home)
-	writeTestFile(t, filepath.Join(home, ".san", "settings.json"),
+	writeTestFile(t, filepath.Join(home, ".cube", "settings.json"),
 		`{"selfLearn":{"skills":{"enabled":true,"denyCreate":true}}}`)
-	writeTestFile(t, filepath.Join(cwd, ".san", "settings.json"),
+	writeTestFile(t, filepath.Join(cwd, ".cube", "settings.json"),
 		`{"selfLearn":{"skills":{"enabled":true}}}`)
 
 	settings := &setting.Settings{}
@@ -99,13 +99,13 @@ func TestLearnedStoresFollowLiveWorkspace(t *testing.T) {
 	t.Setenv("HOME", home)
 	t.Setenv("USERPROFILE", home)
 
-	writeTestFile(t, filepath.Join(cwdA, ".san", "settings.json"),
+	writeTestFile(t, filepath.Join(cwdA, ".cube", "settings.json"),
 		`{"selfLearn":{"memory":{"path":"memory-a"},"skills":{"enabled":true}}}`)
-	writeTestFile(t, filepath.Join(cwdB, ".san", "settings.json"),
+	writeTestFile(t, filepath.Join(cwdB, ".cube", "settings.json"),
 		`{"selfLearn":{"memory":{"path":"memory-b"},"skills":{"enabled":true}}}`)
-	writeTestFile(t, filepath.Join(cwdA, ".san", "skills", "skill-a", "SKILL.md"),
+	writeTestFile(t, filepath.Join(cwdA, ".cube", "skills", "skill-a", "SKILL.md"),
 		"---\ndescription: from a\norigin: agent-created\n---\n# A\n")
-	writeTestFile(t, filepath.Join(cwdB, ".san", "skills", "skill-b", "SKILL.md"),
+	writeTestFile(t, filepath.Join(cwdB, ".cube", "skills", "skill-b", "SKILL.md"),
 		"---\ndescription: from b\norigin: agent-created\n---\n# B\n")
 	writeTestFile(t, filepath.Join(cwdA, "memory-a", system.AutoMemoryIndexName), "from a\n")
 	writeTestFile(t, filepath.Join(cwdB, "memory-b", "topic-b.md"), "from b\n")

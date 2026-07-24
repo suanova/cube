@@ -11,11 +11,12 @@ import (
 
 const (
 	// EnvLoadClaudePlugins controls whether to load Claude Code plugins.
-	EnvLoadClaudePlugins = "SAN_LOAD_CLAUDE_PLUGINS"
+	EnvLoadClaudePlugins = "CUBE_LOAD_CLAUDE_PLUGINS"
 )
 
 // LoadClaudePlugins loads plugins from Claude Code's plugin directories.
-// This is controlled by the SAN_LOAD_CLAUDE_PLUGINS environment variable.
+// This is controlled by the CUBE_LOAD_CLAUDE_PLUGINS environment variable
+// (falling back to the legacy SAN_LOAD_CLAUDE_PLUGINS).
 func (r *Registry) LoadClaudePlugins(ctx context.Context) error {
 	if setting.Getenv("LOAD_CLAUDE_PLUGINS") != "true" {
 		return nil

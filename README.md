@@ -1,19 +1,18 @@
 <div align="center">
-  <h1>&lt; SAN ✦ /&gt;</h1>
+  <h1>&lt; CUBE ✦ /&gt;</h1>
   <p><strong>A fast, open agent harness for the terminal, built on a flexible and extensible architecture.</strong></p>
   <p>
-    <a href="https://github.com/genai-io/san/releases"><img src="https://img.shields.io/github/v/release/genai-io/san?style=flat-square" alt="Release"></a>
+    <a href="https://github.com/suanova/cube/releases"><img src="https://img.shields.io/github/v/release/suanova/cube?style=flat-square" alt="Release"></a>
     <a href="https://genai-io.github.io/san/"><img src="https://img.shields.io/badge/Website-0d9488?style=flat-square" alt="Website"></a>
     <a href="https://genai-io.github.io/san/getting-started.html"><img src="https://img.shields.io/badge/Getting%20Started-0d9488?style=flat-square" alt="Getting Started"></a>
     <a href="docs/index.md"><img src="https://img.shields.io/badge/Docs-0d9488?style=flat-square" alt="Docs"></a>
-    <a href="https://www.producthunt.com/products/san?launch=san"><img src="https://img.shields.io/badge/Product%20Hunt-da552f?style=flat-square&logo=producthunt&logoColor=white" alt="Product Hunt"></a>
     <a href="LICENSE"><img src="https://img.shields.io/badge/license-Apache%202.0-blue?style=flat-square" alt="License"></a>
   </p>
   <p>
     <strong>English</strong> · <a href="README.zh.md">简体中文</a>
   </p>
   <p>
-    <a href="https://genai-io.github.io/san/intro.html"><img src="assets/san-intro.gif" alt="San — animated intro" width="100%"></a>
+    <a href="https://genai-io.github.io/san/intro.html"><img src="assets/san-intro.gif" alt="Cube — animated intro" width="100%"></a>
   </p>
   <sub><a href="https://genai-io.github.io/san/intro.html">Open the full-quality intro ↗</a></sub>
   <p>
@@ -21,16 +20,21 @@
   </p>
 </div>
 
-San is an open-source terminal agent harness: one native Go binary for
+> **Cube is a fork of [san](https://github.com/genai-io/san)**, continuing its
+> development as a community project. Configuration from `san` (`~/.san`,
+> `SAN_*` env vars, `SAN.md`) is read automatically — see
+> [Fork lineage](#fork-lineage) below.
+
+Cube is an open-source terminal agent harness: one native Go binary for
 model-driven work, with no Node.js or Python runtime.
 
-**Why San**
+**Why Cube**
 
 - **Fast** — a ~12 MB single binary, ~0.01s cold start, no separate runtime.
 - **Open** — swap the model, search, and tools at runtime; bring your own persona profiles and extensions.
 - **Harness** — configure permissions, autopilot, memory, and skills for your workflow.
 
-<sub>*The name — **San**, written **三** ("three") and drawn **☰**. From the Dao De Jing, 三生万物 — "three begets the ten-thousand things": one runtime that becomes any agent, running a three-step loop (reason → act → observe). The command stays `san`.*</sub>
+<sub>*Cube continues san, whose name is **San**, written **三** ("three") and drawn **☰**. From the Dao De Jing, 三生万物 — "three begets the ten-thousand things": one runtime that becomes any agent, running a three-step loop (reason → act → observe). The command is `cube`.*</sub>
 
 ## Features
 
@@ -38,7 +42,7 @@ model-driven work, with no Node.js or Python runtime.
 <summary><b>Open architecture</b> &nbsp;·&nbsp; overview diagram</summary>
 
 <div align="center">
-  <img src="assets/san.png" alt="San — pluggable models, search backends, personas, skills &amp; extensions, and a self-evolving agent" width="100%">
+  <img src="assets/san.png" alt="Cube — pluggable models, search backends, personas, skills &amp; extensions, and a self-evolving agent" width="100%">
 </div>
 
 </details>
@@ -50,10 +54,10 @@ model-driven work, with no Node.js or Python runtime.
 
 ### Engineering
 
-- **Runs anywhere** — one static binary for Windows, macOS, and Linux; the same file runs on a laptop, an edge device, or a `scratch` container ([footprint](docs/operations/footprint.md) · [benchmark](#benchmark-san-vs-claude-code)).
+- **Runs anywhere** — one static binary for Windows, macOS, and Linux; the same file runs on a laptop, an edge device, or a `scratch` container ([footprint](docs/operations/footprint.md) · [benchmark](#benchmark-cube-vs-claude-code)).
 - **Permissions** — three modes (ask · auto-accept · autopilot) toggled with `Shift+Tab`; subagents inherit the gates ([details](docs/concepts/permission-model.md)).
 - **Sessions** — auto-save, resume (`--continue` / `--resume`), fork (`/fork`), auto-compaction (`/compact`), and per-message cost tracking.
-- **Inspector** — replay transcripts and inspect system prompts in a local web UI (`san inspector`).
+- **Inspector** — replay transcripts and inspect system prompts in a local web UI (`cube inspector`).
 - Plus event-driven subagent coordination, TUI themes, and prompt prediction.
 
 
@@ -62,16 +66,16 @@ model-driven work, with no Node.js or Python runtime.
 **macOS / Linux**
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/genai-io/san/main/install.sh | bash
+curl -fsSL https://raw.githubusercontent.com/suanova/cube/main/install.sh | bash
 ```
 
 **Windows (PowerShell)**
 
 ```powershell
-irm https://raw.githubusercontent.com/genai-io/san/main/install.ps1 | iex
+irm https://raw.githubusercontent.com/suanova/cube/main/install.ps1 | iex
 ```
 
-Start with `san`. On first launch, choose a model and add its API key when prompted. To update later, run `san update`.
+Start with `cube`. On first launch, choose a model and add its API key when prompted. To update later, run `cube update`.
 
 <details>
 <summary><b>Other methods</b></summary>
@@ -80,27 +84,27 @@ Start with `san`. On first launch, choose a model and add its API key when promp
 
 ```bash
 # macOS / Linux
-curl -fsSL https://raw.githubusercontent.com/genai-io/san/main/install.sh | bash -s uninstall
+curl -fsSL https://raw.githubusercontent.com/suanova/cube/main/install.sh | bash -s uninstall
 ```
 
 ```powershell
 # Windows (PowerShell)
-& ([scriptblock]::Create((irm https://raw.githubusercontent.com/genai-io/san/main/install.ps1))) uninstall
+& ([scriptblock]::Create((irm https://raw.githubusercontent.com/suanova/cube/main/install.ps1))) uninstall
 ```
 
 **Go Install (requires Go 1.25.8+)**
 
 ```bash
-go install github.com/genai-io/san/cmd/san@latest
+go install github.com/genai-io/san/cmd/cube@latest
 ```
 
 **Build from Source**
 
 ```bash
-git clone https://github.com/genai-io/san.git
-cd san
-go build -o san ./cmd/san
-mkdir -p ~/.local/bin && mv san ~/.local/bin/
+git clone https://github.com/suanova/cube.git
+cd cube
+go build -o cube ./cmd/cube
+mkdir -p ~/.local/bin && mv cube ~/.local/bin/
 ```
 
 </details>
@@ -108,22 +112,22 @@ mkdir -p ~/.local/bin && mv san ~/.local/bin/
 ## Usage
 
 ```bash
-san                              # interactive
-san "explain this function"      # one-shot
-san -p "do something"            # print mode (no TUI), pipe-friendly
-san --continue                   # resume the latest session
-san --resume                     # pick a past session to resume
+cube                             # interactive
+cube "explain this function"     # one-shot
+cube -p "do something"           # print mode (no TUI), pipe-friendly
+cube --continue                  # resume the latest session
+cube --resume                    # pick a past session to resume
 
-# Subcommands (run `san <command> --help` for the full list)
-san inspector                    # session transcript viewer
-san agent run --type general-purpose --prompt "..."  # run a headless agent
-san plugin <list|install|enable|...>          # manage plugins
-san mcp <add|list|remove|...>                 # manage MCP servers
+# Subcommands (run `cube <command> --help` for the full list)
+cube inspector                   # session transcript viewer
+cube agent run --type general-purpose --prompt "..."  # run a headless agent
+cube plugin <list|install|enable|...>          # manage plugins
+cube mcp <add|list|remove|...>                 # manage MCP servers
 ```
 
 | What | How |
 |---|---|
-| Pick / switch model | `/model` — saved to `~/.san/providers.json` |
+| Pick / switch model | `/model` — saved to `~/.cube/providers.json` |
 | Cycle thinking budget | `Ctrl+T` or `/think` (levels vary by provider) |
 | Toggle permission mode | `Shift+Tab` (ask · auto-accept · autopilot) |
 | Search / persona / memory | `/search` · `/persona` · `/memory` |
@@ -138,7 +142,7 @@ For API keys, set the matching env var (see Credentials below) or paste when pro
 
 ### Configuration
 
-Configuration is loaded from `~/.san/` and `<project>/.san/` (project settings override user settings). Project instructions are read from `.san/SAN.md`, `SAN.md`, `.claude/CLAUDE.md`, or `CLAUDE.md`, in that order.
+Configuration is loaded from `~/.cube/` and `<project>/.cube/` (project settings override user settings). For backward compatibility, `~/.san/` and `<project>/.san/` are also read when the `.cube` directory is absent. Project instructions are read from `.cube/CUBE.md`, `CUBE.md`, `.cube/SAN.md`, `SAN.md`, `.claude/CLAUDE.md`, or `CLAUDE.md`, in that order.
 
 <details>
 <summary><b>Credentials</b></summary>
@@ -168,7 +172,7 @@ Configuration is loaded from `~/.san/` and `<project>/.san/` (project settings o
 <details>
 <summary><b>Directory layout</b></summary>
 
-User-level (`~/.san/`):
+User-level (`~/.cube/`):
 
 ```
 providers.json    # Provider connections and current model
@@ -182,7 +186,7 @@ plugins/          # Installed plugins
 projects/         # Session transcripts + indexes
 ```
 
-Project-level (`.san/`):
+Project-level (`.cube/`):
 
 ```
 settings.json       # Permissions, hooks, disabled tools
@@ -198,11 +202,11 @@ plugins-local/      # Local plugins (git-ignored)
 
 </details>
 
-## Benchmark: San vs Claude Code
+## Benchmark: Cube vs Claude Code
 
 Compared with [Claude Code](https://claude.ai/code) v2.1.112 on Apple Silicon, same model (`claude-sonnet-4-6`):
 
-| Metric | San | Claude Code | Advantage |
+| Metric | Cube | Claude Code | Advantage |
 |--------|---------|-------------|-----------|
 | Download size | 12 MB | 63 MB (+ Node.js 112 MB) | **5x smaller** |
 | Disk footprint | 38 MB | 175 MB | **4.6x smaller** |
@@ -245,12 +249,36 @@ Two ways in — WeChat for the Chinese community, Slack for everyone else:
   <sub>关注公众号「极客外传」· 回复 <code>san</code> 或 <code>三</code> 入群</sub>
 </td>
 <td align="center" width="50%">
-  <img src="assets/slack.png" alt="San Slack QR code" width="200"><br>
+  <img src="assets/slack.png" alt="Cube Slack QR code" width="200"><br>
   <sub>Scan or <a href="https://join.slack.com/t/sanaico/shared_invite/zt-3zvfr8v6f-dchFpvpufY7fKA7tG7lhIg">join our Slack</a></sub>
 </td>
 </tr>
 </table>
 </div>
+
+## Fork lineage
+
+Cube is a fork of [san](https://github.com/genai-io/san) and continues its
+development as a community project under a new name.
+
+- **Module path** — the Go module path remains `github.com/genai-io/san`, so
+  existing imports keep resolving. Only the user-facing identity (binary name,
+  config directory, env vars, branding) changed to `cube` / `CUBE`.
+- **Backward compatibility** — Cube reads `san` configuration transparently:
+  `~/.san/` is used when `~/.cube/` is absent, `SAN_*` env vars are read
+  alongside `CUBE_*`, and `SAN.md` / `SAN.local.md` are loaded as fallbacks
+  behind `CUBE.md` / `CUBE.local.md`. Claude Code compatibility (`CLAUDE_*`
+  env vars, `.claude/CLAUDE.md`) is unchanged.
+- **Upstream** — the `upstream` git remote points at `genai-io/san` for
+  fetching future updates:
+  ```bash
+  git remote add upstream https://github.com/genai-io/san.git
+  ```
+- **Migration** (optional) — to move an existing `san` setup to the canonical
+  `cube` locations:
+  ```bash
+  mv ~/.san ~/.cube
+  ```
 
 ## Contributing
 

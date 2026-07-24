@@ -17,9 +17,9 @@ const (
 type Scope string
 
 const (
-	ScopeUser    Scope = "user"    // ~/.san/mcp.json (global)
-	ScopeProject Scope = "project" // ./.san/mcp.json (team shared)
-	ScopeLocal   Scope = "local"   // ./.san/mcp.local.json (personal, git-ignored)
+	ScopeUser    Scope = "user"    // ~/.cube/mcp.json (global)
+	ScopeProject Scope = "project" // ./.cube/mcp.json (team shared)
+	ScopeLocal   Scope = "local"   // ./.cube/mcp.local.json (personal, git-ignored)
 )
 
 // ServerConfig represents an MCP server configuration

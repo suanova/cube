@@ -2,7 +2,7 @@
 
 ## Reporting a Vulnerability
 
-If you discover a security vulnerability in San, please report it
+If you discover a security vulnerability in Cube, please report it
 privately via GitHub's built-in reporting system:
 
 1. Go to the [Security Advisories][advisories] tab
@@ -36,13 +36,13 @@ the most recent version.
 
 ## Security Model
 
-San is a CLI tool that:
+Cube is a CLI tool that:
 
 - Reads and writes files to your local filesystem
 - Sends prompts and code context to LLM providers (Anthropic, OpenAI, Google)
-- Stores session transcripts locally in `~/.san/`
+- Stores session transcripts locally in `~/.cube/`
 
-**Do not** use San with untrusted extensions, MCP servers, or hooks
+**Do not** use Cube with untrusted extensions, MCP servers, or hooks
 without auditing them first.
 
-[advisories]: https://github.com/genai-io/san/security/advisories
+[advisories]: https://github.com/suanova/cube/security/advisories

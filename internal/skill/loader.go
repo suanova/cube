@@ -54,7 +54,7 @@ func (l *loader) getSearchPaths() []searchPath {
 	// 2. User-scope plugin skills
 	paths = append(paths, userPlugins...)
 
-	// 3. ~/.san/skills/ (User level)
+	// 3. ~/.cube/skills/ (User level)
 	paths = append(paths, searchPath{
 		path:  filepath.Join(confdir.Dir(homeDir), "skills"),
 		scope: ScopeUser,
@@ -69,7 +69,7 @@ func (l *loader) getSearchPaths() []searchPath {
 	// 5. Project-scope plugin skills
 	paths = append(paths, projectPlugins...)
 
-	// 6. .san/skills/ (Project level - highest priority)
+	// 6. .cube/skills/ (Project level - highest priority)
 	paths = append(paths, searchPath{
 		path:  filepath.Join(confdir.Dir(l.cwd), "skills"),
 		scope: ScopeProject,

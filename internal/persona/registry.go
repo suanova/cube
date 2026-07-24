@@ -46,7 +46,7 @@ func Initialize(cwd string) {
 }
 
 // Registry holds the personas discovered on disk plus the virtual default. It
-// scans both ~/.san/personas/ and <cwd>/.san/personas/.
+// scans both ~/.cube/personas/ and <cwd>/.san/personas/.
 //
 // The Registry is read-only after construction; the active persona is stored
 // in settings, not in the registry.
@@ -138,7 +138,7 @@ func (r *Registry) Validate(name string) error {
 		if len(names) > 0 {
 			return fmt.Errorf("persona %q not found; available: %s", name, strings.Join(names, ", "))
 		}
-		return fmt.Errorf("persona %q not found; no personas are configured. Create one under .san/personas/<name>/", name)
+		return fmt.Errorf("persona %q not found; no personas are configured. Create one under .cube/personas/<name>/", name)
 	}
 	return nil
 }

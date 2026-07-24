@@ -124,7 +124,7 @@ allow_tools:
   - Bash(go test*)        # Only go test commands
 ```
 
-An `allow_tools` entry naming a tool San does not ship (for example `Glob`
+An `allow_tools` entry naming a tool Cube does not ship (for example `Glob`
 or `Grep` from a Claude Code agent definition) is simply inert: no schema
 matches it, so it grants nothing. If such an agent needs to search, list
 `Bash` (optionally with patterns) — read-only commands (`rg`, `grep`,

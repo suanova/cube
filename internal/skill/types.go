@@ -42,19 +42,19 @@ const (
 	// ScopeClaudeUser is ~/.claude/skills/ (lowest priority, Claude compatibility)
 	ScopeClaudeUser SkillScope = iota
 
-	// ScopeUserPlugin is ~/.san/plugins/*/skills/ (User plugins)
+	// ScopeUserPlugin is ~/.cube/plugins/*/skills/ (User plugins)
 	ScopeUserPlugin
 
-	// ScopeUser is ~/.san/skills/ (San user level)
+	// ScopeUser is ~/.cube/skills/ (Cube user level)
 	ScopeUser
 
 	// ScopeClaudeProject is .claude/skills/ (Claude project compatibility)
 	ScopeClaudeProject
 
-	// ScopeProjectPlugin is .san/plugins/*/skills/ (Project plugins)
+	// ScopeProjectPlugin is .cube/plugins/*/skills/ (Project plugins)
 	ScopeProjectPlugin
 
-	// ScopeProject is .san/skills/ (San project level, highest priority)
+	// ScopeProject is .cube/skills/ (Cube project level, highest priority)
 	ScopeProject
 
 	// ScopePersona is the selected persona's skills/ — loaded in-memory at the

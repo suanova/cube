@@ -1,6 +1,6 @@
 # Architecture
 
-San is a single-binary terminal AI coding assistant. The runtime is an
+Cube is a single-binary terminal AI coding assistant. The runtime is an
 event-driven agent loop running inside a Bubble Tea TUI shell, with extension
 surfaces for skills, plugins, MCP servers, hooks, slash commands, and
 subagents.

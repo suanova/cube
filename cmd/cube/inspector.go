@@ -36,7 +36,7 @@ var inspectorCmd = &cobra.Command{
 	Use:   "inspector",
 	Short: "Open the local inspector for this project's sessions",
 	Long: `Launch a localhost web server that visualizes session transcripts
-recorded under ~/.san/projects/<encoded-cwd>/transcripts/. The inspector
+recorded under ~/.cube/projects/<encoded-cwd>/transcripts/. The inspector
 is read-only and runs until Ctrl-C.
 
 By default the server binds 127.0.0.1 on a random port and opens the page
@@ -91,7 +91,7 @@ in your default browser. Use --no-open to skip the browser launch and
 	},
 }
 
-// projectDirFor returns ~/.san/projects/<encoded-cwd>. Mirrors
+// projectDirFor returns ~/.cube/projects/<encoded-cwd>. Mirrors
 // session.encodePath without importing internals.
 func projectDirFor(cwd string) string {
 	home, _ := os.UserHomeDir()

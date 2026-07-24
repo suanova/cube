@@ -6,11 +6,11 @@ Proposed — 2026-06-11.
 
 ## Context
 
-Development of the San project (`genai-io/san`) currently relies on a
+Development of the Cube project (`genai-io/san`) currently relies on a
 human to drive the agent in every session. Issues, features, and bugs
 are not managed autonomously.
 
-The goal is to make San a **fully AI-managed project**: humans only
+The goal is to make Cube a **fully AI-managed project**: humans only
 express intent ("build feature X", "fix all P0 bugs"), and a team of
 Personas handles everything — breaking down requirements, designing
 architecture, writing code, running tests, and shipping releases.
@@ -19,7 +19,7 @@ Humans stop writing code and only state what they want.
 ## Core Model
 
 Under the existing Org (`genai-io`), create a **new, separate Repo**
-`san-team` for storing the San development team's Personas.
+`san-team` for storing the Cube development team's Personas.
 Each team is a collection of Personas that collaborate on a specific project.
 
 Each Persona follows the
@@ -27,8 +27,8 @@ Each Persona follows the
 
 ```
 genai-io（Org, existing）
-├── san              ← San source repo (existing, the managed project)
-└── san-team         ← New repo (San development team Personas)
+├── cube             ← Cube source repo (existing, the managed project)
+└── san-team         ← New repo (Cube development team Personas)
     ├── leader/
     │   ├── system/
     │   │   ├── identity.md
@@ -63,12 +63,12 @@ genai-io（Org, existing）
         └── settings.json
 ```
 
-- **`san-team`**: New repo containing the San project's development team.
+- **`san-team`**: New repo containing the Cube project's development team.
   Personas live directly under the repo root. If other projects need
   similar autonomous management, they can create their own team repos
   (e.g., `devops-team`).
 - **Team**: A collection of Personas in the `san-team` repo that
-  collaborate toward a specific goal — managing the San project's issues,
+  collaborate toward a specific goal — managing the Cube project's issues,
   features, bugs, and releases.
 - **Persona directory**: Each Persona follows the persona spec's three-layer
   structure:
@@ -79,23 +79,23 @@ genai-io（Org, existing）
 
 ## Runtime Model
 
-Each Persona runs as an **independent San instance**:
+Each Persona runs as an **independent Cube instance**:
 
 ```bash
 # Start Leader Persona (admin interaction entry point)
-san start --persona leader --team san-team
+cube start --persona leader --team san-team
 
 # Start Dev Persona (waits for coding tasks)
-san start --persona dev --team san-team
+cube start --persona dev --team san-team
 
 # Start QE Persona (waits for verification tasks)
-san start --persona qe --team san-team
+cube start --persona qe --team san-team
 
 # Start Release Persona (waits for release tasks)
-san start --persona release --team san-team
+cube start --persona release --team san-team
 ```
 
-The `--persona` flag tells San to load a specific Persona directory's
+The `--persona` flag tells Cube to load a specific Persona directory's
 config (system/ + skills/ + settings.json) at startup, avoiding the
 need for mid-session `/persona` switching.
 
@@ -127,7 +127,7 @@ Admin (human)
           ▼        ▼        ▼
     ┌──────────┐ ┌──────┐ ┌─────────┐
     │Dev│ │  QE  │ │ Release │
-    │ san start│ │san start│ │san start│
+    │cube start│ │cube start│ │cube start│
     │ --persona│ │--persona│ │--persona│
     │dev│ │  qe    │ │ release │
     └──────────┘ └──────┘ └─────────┘
@@ -135,18 +135,18 @@ Admin (human)
 
 ### Leader Persona — Single Entry Point
 
-Started via `san start --persona leader --team san-team`.
+Started via `cube start --persona leader --team san-team`.
 The admin's only interface. Leader handles:
 
 1. **Understand intent**: new feature? bug fix? refactor?
-2. **Analyze San**: read design docs and existing code in the San repo
+2. **Analyze Cube**: read design docs and existing code in the Cube repo
 3. **Visualize**: draw mermaid architecture/state diagrams, confirm with admin
 4. **Break down**: decompose into Tasks, write to shared work queue
 5. **Monitor**: track Task status changes in the queue
 6. **Report**: collect results, summarize for the admin
 
 Leader does not write code. It writes Tasks to the queue; the matching
-Persona's San instance picks them up automatically.
+Persona's Cube instance picks them up automatically.
 
 ```
 Leader dispatches a coding task:
@@ -154,7 +154,7 @@ Leader dispatches a coding task:
 Leader:
   1. After analysis, determines Task-3 is a coding task
   2. Writes Task-3 to queue (marked role: dev)
-  3. Dev San instance polls queue, finds Task-3 matching its role
+  3. Dev Cube instance polls queue, finds Task-3 matching its role
   4. Dev claims Task-3, starts implementation
   5. On completion, updates queue status to done with PR link
   6. Leader polls queue, sees Task-3 done, proceeds to next step
@@ -162,11 +162,11 @@ Leader:
 
 ### Dev Persona — Implementation
 
-Started via `san start --persona dev --team san-team`.
+Started via `cube start --persona dev --team san-team`.
 Continuously polls the queue for coding tasks:
 
 1. Claims Tasks from queue with role `dev`
-2. Reads San's design docs and existing code
+2. Reads Cube's design docs and existing code
 3. Implements following the layered architecture conventions
 4. Writes tests
 5. Runs `make test` + `make lint`
@@ -175,7 +175,7 @@ Continuously polls the queue for coding tasks:
 
 ### QE Persona — Verification
 
-Started via `san start --persona qe --team san-team`.
+Started via `cube start --persona qe --team san-team`.
 Continuously polls the queue for verification tasks:
 
 1. Claims Tasks from queue with role `qe` (corresponding to Dev done)
@@ -189,7 +189,7 @@ Can also verify designs before implementation starts.
 
 ### Release Persona — Shipping
 
-Started via `san start --persona release --team san-team`:
+Started via `cube start --persona release --team san-team`:
 
 1. Claims Tasks from queue with role `release` (after all QE verified)
 2. Generates CHANGELOG
@@ -233,9 +233,9 @@ Each Persona is a persona directory. Using Dev as an example:
 ### system/identity.md（Who am I?）
 
 ```markdown
-You are the Dev agent for the San project.
+You are the Dev agent for the Cube project.
 Your job is to claim coding tasks from the shared queue and implement them.
-You are an expert Go developer familiar with San's five-layer package architecture.
+You are an expert Go developer familiar with Cube's five-layer package architecture.
 ```
 
 ### system/behavior.md（How do I act?）
@@ -282,7 +282,7 @@ You are an expert Go developer familiar with San's five-layer package architectu
 
 ```json
 {
-  "description": "San project Dev Persona — implements code and submits PRs",
+  "description": "Cube project Dev Persona — implements code and submits PRs",
   "model": "claude-sonnet-4-6",
   "maxSteps": 80,
   "skills": {
@@ -311,7 +311,7 @@ You are an expert Go developer familiar with San's five-layer package architectu
 ### Leader's system/identity.md
 
 ```markdown
-You are the Leader Agent for the San project — the single entry point
+You are the Leader Agent for the Cube project — the single entry point
 for all admin interactions. You understand requirements, analyze the project,
 draw architecture diagrams, break down tasks, and write them to the shared queue.
 You do not write business code yourself — your job is planning, orchestration,
@@ -322,7 +322,7 @@ and decision-making.
 
 ```json
 {
-  "description": "San project Leader Persona — single admin entry point",
+  "description": "Cube project Leader Persona — single admin entry point",
   "model": "claude-opus-4-7",
   "maxSteps": 200,
   "skills": {},
@@ -349,7 +349,7 @@ Admin input: **"Implement user authentication with JWT login"**
 
 ### 1. Leader understands + draws diagrams
 
-Leader reads San's `docs/design/`, analyzes existing code, generates a
+Leader reads Cube's `docs/design/`, analyzes existing code, generates a
 mermaid sequence diagram:
 
 ```mermaid
@@ -390,20 +390,20 @@ Queue writes:
 ### 3. Personas claim and execute
 
 ```
-Dev San instance polls queue:
+Dev Cube instance polls queue:
   Claims Task 1 → implements → marks done
   Claims Task 2 → implements → marks done
   Claims Task 3 → implements → marks done
   Claims Task 4 → implements → marks done
 
-QE San instance polls queue:
+QE Cube instance polls queue:
   Sees Tasks 1-4 done → claims Task 5
   Checks out PR branch → runs tests → passes → marks verified
 
 Leader monitors all verified → notifies admin to approve PR
 Admin approves → Leader writes Task 6
 
-Release San instance polls queue:
+Release Cube instance polls queue:
   Claims Task 6 → generates CHANGELOG → tags → marks done
 
 Leader → Admin: "Authentication feature complete and shipped. PR: #1234"
@@ -415,22 +415,22 @@ Admin tells Leader: **"Scan and fix all P0 bugs"**
 
 ```
 Leader:
-  1. Pulls all P0 bug issues from San repo via GhCLI
+  1. Pulls all P0 bug issues from Cube repo via GhCLI
   2. Analyzes each, writes to queue:
      - { role: dev, title: "Fix #100 nil pointer in auth.go" }
      - { role: dev, title: "Fix #102 timeout in db query" }
 
-Dev San instance:
+Dev Cube instance:
   Claims "#100" → analyzes root cause → fix → PR → marks done
   Claims "#102" → analyzes root cause → fix → PR → marks done
 
-QE San instance:
+QE Cube instance:
   Claims "#100 verify" → tests → reviews PR → passes → marks verified
   Claims "#102 verify" → tests → reviews PR → passes → marks verified
 
 Leader notifies admin to approve → admin approves
 
-Release San instance:
+Release Cube instance:
   Claims "hotfix release" → generates CHANGELOG → tags → marks done
 
 Leader → Admin: "2 P0 bugs fixed and shipped"
@@ -443,11 +443,11 @@ Leader → Admin: "2 P0 bugs fixed and shipped"
 Each Persona follows the persona spec defined in
 [`persona-system.md`](../../notes/active/persona-system.md). A Persona is a
 folder containing `system/` (split into identity/behavior/rules/environment),
-`skills/`, and `settings.json`. Missing parts fall back to San's built-in defaults.
+`skills/`, and `settings.json`. Missing parts fall back to Cube's built-in defaults.
 
 ### 2. Personas stored in a separate `san-team` repo
 
-Persona definitions live in a dedicated repo, separate from the San source:
+Persona definitions live in a dedicated repo, separate from the Cube source:
 - Independent version history for Persona configs
 - Different access permissions for the san-team repo
 - Team Personas can manage multiple target repos (future)
@@ -459,10 +459,10 @@ The admin never talks directly to Dev/QE/Release:
 - Leader has global visibility to prioritize and handle conflicts
 - Other Personas focus only on their queue tasks, don't need global context
 
-### 4. Each Persona is an independent San instance
+### 4. Each Persona is an independent Cube instance
 
 Instead of nested sub-agent calls via the Agent tool, each Persona runs
-as an independent San process (`san start --persona <name> --team <team>`):
+as an independent Cube process (`cube start --persona <name> --team <team>`):
 - Process-level isolation: each Persona has its own context, tools, permissions
 - Can be deployed on different machines/containers, independently scaled
 - Coordination through the shared work queue (file-based), no IPC needed
@@ -515,7 +515,7 @@ Task complete → Persona writes retrospective → identifies improvements
 | New Concept | Existing / Planned Mechanism |
 |---|---|
 | Persona directory | Persona directory (`persona-system.md` spec) |
-| `san start --persona` | Startup-time persona selection (no mid-session switch needed) |
+| `cube start --persona` | Startup-time persona selection (no mid-session switch needed) |
 | Shared work queue | New: filesystem JSONL queue (`state/queue.jsonl`) |
 | Persona communication | Queue polling, no inter-process RPC needed |
 | Persona permissions | settings.json permissions (deny: add-only) |
@@ -528,9 +528,9 @@ Task complete → Persona writes retrospective → identifies improvements
 - Write four Persona directories (leader/dev/qe/release)
 - Each with `system/{identity,behavior,rules}.md` + `skills/` + `settings.json`
 
-### Phase 2 — `san start --persona` feature
+### Phase 2 — `cube start --persona` feature
 
-- San CLI adds `--persona` and `--team` flags
+- Cube CLI adds `--persona` and `--team` flags
 - On startup, load the specified Persona config from the team directory
 - Load system/ files as the system prompt
 - Load skills/ as active skills
@@ -556,7 +556,7 @@ Task complete → Persona writes retrospective → identifies improvements
 
 - Cron-triggered bug scanning → auto-write to queue
 - Auto-trigger Leader task breakdown on design doc merge
-- Progress dashboard (CLI: `san team status`)
+- Progress dashboard (CLI: `cube team status`)
 - Persona instance health monitoring
 
 ## Reference Skills
@@ -602,13 +602,13 @@ directly adopt them or use them as design references.
 
 1. **Direct adoption**: Copy the repo's `.claude/skills/` into the Persona's `skills/` directory
 2. **Reference design**: Extract patterns (agent separation, adversarial verification,
-   multi-stage review) and rewrite for the San project
+   multi-stage review) and rewrite for the Cube project
 3. **Priority**: Community skills (marketplace scope) rank below project-custom skills;
    Leader must approve before enabling
 
 ## Additional Decisions
 
-1. **Parallel Dev instances**: Each Dev San instance
+1. **Parallel Dev instances**: Each Dev Cube instance
    works in its own git worktree and submits PRs independently. If
    multiple PRs touch the same file, GitHub's merge conflict mechanism
    handles it. When Leader detects a conflict, it creates a new fix task.

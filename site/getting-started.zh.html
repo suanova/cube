@@ -3,9 +3,9 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>快速开始 — San</title>
-<meta name="description" content="三步快速开始使用 San：安装、启动并选择主题，然后连接你的模型。">
-<meta property="og:title" content="快速开始 — San">
+<title>快速开始 — Cube</title>
+<meta name="description" content="三步快速开始使用 Cube：安装、启动并选择主题，然后连接你的模型。">
+<meta property="og:title" content="快速开始 — Cube">
 <meta property="og:description" content="安装、选择主题、连接模型——几分钟内即可开始使用。">
 <meta property="og:type" content="article">
 <meta property="og:url" content="https://genai-io.github.io/san/getting-started.zh.html">
@@ -34,7 +34,7 @@
         </button>
         <div class="lang-menu" id="lang-menu" role="listbox"></div>
       </span>
-      <a class="nav-cta" href="https://github.com/genai-io/san">★ 在 GitHub 标星</a>
+      <a class="nav-cta" href="https://github.com/suanova/cube">★ 在 GitHub 标星</a>
     </div>
   </div>
 </nav>
@@ -58,16 +58,16 @@
           <p style="margin-top:14px;"><b>macOS / Linux</b></p>
           <div class="cmd">
             <span class="prompt">$</span>
-            <code id="install-cmd">curl -fsSL https://raw.githubusercontent.com/genai-io/san/main/install.sh | bash</code>
+            <code id="install-cmd">curl -fsSL https://raw.githubusercontent.com/suanova/cube/main/install.sh | bash</code>
             <button class="copy-btn" onclick="copyEl('install-cmd', this)">复制</button>
           </div>
           <p style="margin-top:14px;"><b>Windows (PowerShell)</b></p>
           <div class="cmd">
             <span class="prompt">&gt;</span>
-            <code id="install-cmd-win">irm https://raw.githubusercontent.com/genai-io/san/main/install.ps1 | iex</code>
+            <code id="install-cmd-win">irm https://raw.githubusercontent.com/suanova/cube/main/install.ps1 | iex</code>
             <button class="copy-btn" onclick="copyEl('install-cmd-win', this)">复制</button>
           </div>
-          <p style="margin-top:14px;">更偏好 Go？<code class="inline">go install github.com/genai-io/san/cmd/san@latest</code></p>
+          <p style="margin-top:14px;">更偏好 Go？<code class="inline">go install github.com/suanova/cube/cmd/cube@latest</code></p>
         </div>
       </div>
 
@@ -75,7 +75,7 @@
         <div class="num">2</div>
         <div class="step-body">
           <h3>启动并选择主题</h3>
-          <p>运行 <code class="inline">san</code> 启动 San。首次启动时你需选择一个配色主题——选择后即可连接模型。</p>
+          <p>运行 <code class="inline">san</code> 启动 Cube。首次启动时你需选择一个配色主题——选择后即可连接模型。</p>
           <div class="cmd">
             <span class="prompt">$</span>
             <code id="run-cmd">san</code>
@@ -94,7 +94,7 @@
             <li>等待提供商模型列表加载完成。</li>
             <li>从<b>模型</b>列表中选择你想要的模型，开始编码。</li>
           </ol>
-          <p style="margin-top:14px;">随时通过 <code class="inline">/model</code> 切换提供商或模型。你的选择会保存到 <code class="inline">~/.san/providers.json</code>。</p>
+          <p style="margin-top:14px;">随时通过 <code class="inline">/model</code> 切换提供商或模型。你的选择会保存到 <code class="inline">~/.cube/providers.json</code>。</p>
         </div>
       </div>
 
@@ -104,7 +104,7 @@
       <h2>准备就绪</h2>
       <p>输入 <code class="inline" style="background:var(--bg);">/help</code> 探索斜杠命令，或深入了解文档。</p>
       <div class="hero-actions">
-        <a class="btn btn-primary" href="https://github.com/genai-io/san/tree/main/docs">阅读文档</a>
+        <a class="btn btn-primary" href="https://github.com/suanova/cube/tree/main/docs">阅读文档</a>
         <a class="btn btn-ghost" href="index.zh.html">返回首页</a>
       </div>
     </div>
@@ -113,11 +113,11 @@
 
 <footer>
   <div class="wrap">
-    <span>© <span id="year"></span> San · Apache 2.0</span>
+    <span>© <span id="year"></span> Cube · Apache 2.0</span>
     <span>
-      <a href="https://github.com/genai-io/san">GitHub</a> ·
-      <a href="https://github.com/genai-io/san/tree/main/docs">文档</a> ·
-      <a href="https://github.com/genai-io/san/blob/main/CONTRIBUTING.md">贡献指南</a>
+      <a href="https://github.com/suanova/cube">GitHub</a> ·
+      <a href="https://github.com/suanova/cube/tree/main/docs">文档</a> ·
+      <a href="https://github.com/suanova/cube/blob/main/CONTRIBUTING.md">贡献指南</a>
     </span>
   </div>
 </footer>

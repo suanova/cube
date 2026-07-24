@@ -1,13 +1,13 @@
 #!/usr/bin/env python3
 """
-Release Bot — Automates release PR creation for genai-io/san.
+Release Bot — Automates release PR creation for suanova/cube.
 
 On each run:
   1. Finds the latest release tag (vX.Y.Z)
   2. Collects all merged PRs since that tag
   3. Categorises them into Added / Changed / Fixed / Removed
   4. Bumps the version (patch by default)
-  5. Rewrites CHANGELOG.md and cmd/san/main.go
+  5. Rewrites CHANGELOG.md and cmd/cube/main.go
   6. Creates (or updates) a release/vX.Y.Z PR against main
 
 Usage from GitHub Actions workflow:
@@ -27,7 +27,7 @@ import sys
 from datetime import datetime, timezone, date, timedelta
 from pathlib import Path
 
-REPO = "genai-io/san"
+REPO = "suanova/cube"
 MAIN_BRANCH = "main"
 
 # ── helpers ──────────────────────────────────────────────────────────────
@@ -202,8 +202,8 @@ def generate_changelog(version_tag, date_str, prs):
 
 
 def read_version_from_main_go():
-    """Read the current version string from cmd/san/main.go."""
-    m = re.search(r'var version = "(.*?)"', Path("cmd/san/main.go").read_text())
+    """Read the current version string from cmd/cube/main.go."""
+    m = re.search(r'var version = "(.*?)"', Path("cmd/cube/main.go").read_text())
     return m.group(1) if m else None
 
 
@@ -217,7 +217,7 @@ def main():
     if not latest_tag:
         fallback = read_version_from_main_go()
         if not fallback:
-            print("::error:: No tag and no version in cmd/san/main.go — cannot proceed.")
+            print("::error:: No tag and no version in cmd/cube/main.go — cannot proceed.")
             sys.exit(1)
         current_version = fallback
         print(f"::warning:: No version tag found. Using in-file version {current_version}")
@@ -321,8 +321,8 @@ def main():
     changelog.write_text(new_changelog)
     print("Updated CHANGELOG.md")
 
-    # 9. Update cmd/san/main.go
-    main_go = Path("cmd/san/main.go")
+    # 9. Update cmd/cube/main.go
+    main_go = Path("cmd/cube/main.go")
     main_content = main_go.read_text()
     main_content = re.sub(
         r'var version = ".*?"',
@@ -330,13 +330,13 @@ def main():
         main_content,
     )
     main_go.write_text(main_content)
-    print(f"Updated cmd/san/main.go -> version {next_version}")
+    print(f"Updated cmd/cube/main.go -> version {next_version}")
 
     # 10. Commit, push, create PR
-    run(["git", "config", "user.name", "san-release-bot[bot]"])
-    run(["git", "config", "user.email", "san-release-bot@genai-io.users.github.com"])
+    run(["git", "config", "user.name", "cube-release-bot[bot]"])
+    run(["git", "config", "user.email", "cube-release-bot@suanova.users.github.com"])
     run(["git", "checkout", "-b", branch])
-    run(["git", "add", "CHANGELOG.md", "cmd/san/main.go"])
+    run(["git", "add", "CHANGELOG.md", "cmd/cube/main.go"])
     run(["git", "commit", "-m", f"chore: bump version to {next_version}"])
     run(["git", "push", "origin", branch])
 

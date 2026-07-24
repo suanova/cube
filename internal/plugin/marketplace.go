@@ -461,8 +461,8 @@ func (m *MarketplaceManager) ListPlugins(marketplaceID string) ([]string, error)
 
 // isValidPlugin checks if a directory contains a valid plugin.
 func isValidPlugin(path string) bool {
-	// Check for .san-plugin or .claude-plugin manifest
-	for _, metaDir := range []string{SanPluginDir, ClaudePluginDir} {
+	// Check for .cube-plugin, .san-plugin, or .claude-plugin manifest
+	for _, metaDir := range []string{CubePluginDir, LegacySanPluginDir, ClaudePluginDir} {
 		manifestPath := filepath.Join(path, metaDir, "plugin.json")
 		if _, err := os.Stat(manifestPath); err == nil {
 			return true
@@ -486,7 +486,8 @@ func (m *MarketplaceManager) GetMarketplaceMetadata(marketplaceID string) (*Mark
 
 	searchPaths := []string{
 		filepath.Join(basePath, ClaudePluginDir, "marketplace.json"),
-		filepath.Join(basePath, SanPluginDir, "marketplace.json"),
+		filepath.Join(basePath, CubePluginDir, "marketplace.json"),
+		filepath.Join(basePath, LegacySanPluginDir, "marketplace.json"),
 		filepath.Join(basePath, "marketplace.json"),
 	}
 

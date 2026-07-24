@@ -51,8 +51,8 @@ func ResetDefaultRegistry()          // test-only
   - **Built-ins** registered from `builtin/` subpackage at init.
   - **Dynamic** — `DynamicProviders` callbacks returning `Info` slices
     (used by skill/agent slash-command surfaces).
-  - **Custom** — markdown files under `~/.san/commands/` and
-    `<project>/.san/commands/`, plus plugin-scoped paths returned by
+  - **Custom** — markdown files under `~/.cube/commands/` and
+    `<project>/.cube/commands/`, plus plugin-scoped paths returned by
     `PluginCommandPaths`.
 - `Info` carries name, description, namespace, source path.
 

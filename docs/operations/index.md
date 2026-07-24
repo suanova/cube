@@ -1,6 +1,6 @@
 # Operations
 
-Building, testing, releasing, and operating San.
+Building, testing, releasing, and operating Cube.
 
 | Page | Topic |
 |---|---|

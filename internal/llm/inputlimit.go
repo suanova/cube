@@ -6,12 +6,12 @@ import (
 )
 
 // The context window is the denominator of every "how full is the context"
-// question San asks — the status bar's percentage and the agent's
+// question Cube asks — the status bar's percentage and the agent's
 // auto-compaction trigger. Both must get the same answer, so both resolve it
 // here. Issue #338 was the display and the trigger disagreeing; keeping one
 // resolver is what stops that from recurring.
 
-// InputLimitEnvVar sets the window for a model San cannot size on its own,
+// InputLimitEnvVar sets the window for a model Cube cannot size on its own,
 // e.g. an aggregator serving a model without publishing its limits. There is
 // deliberately no default to stand in for it: a guessed window is acted on
 // silently, and guessing low costs real context on every compaction while
@@ -19,12 +19,22 @@ import (
 // skips proactive compaction and leaves the prompt-too-long retry
 // (isPromptTooLong) to recover — one wasted request, no invented number, and
 // the status bar honestly reads "--" instead of a percentage of a guess.
-const InputLimitEnvVar = "SAN_INPUT_LIMIT"
+//
+// legacyInputLimitEnvVar is the pre-fork name; it is still read when the
+// canonical name is unset so existing san setups keep working.
+const (
+	InputLimitEnvVar       = "CUBE_INPUT_LIMIT"
+	legacyInputLimitEnvVar = "SAN_INPUT_LIMIT"
+)
 
 // inputLimitOverride returns the window forced by InputLimitEnvVar, or 0 when
-// unset or not a positive integer.
+// unset or not a positive integer. Falls back to the legacy SAN_INPUT_LIMIT.
 func inputLimitOverride() int {
-	n, err := strconv.Atoi(os.Getenv(InputLimitEnvVar))
+	v := os.Getenv(InputLimitEnvVar)
+	if v == "" {
+		v = os.Getenv(legacyInputLimitEnvVar)
+	}
+	n, err := strconv.Atoi(v)
 	if err != nil || n <= 0 {
 		return 0
 	}

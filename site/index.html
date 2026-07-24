@@ -3,10 +3,10 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>San — Fast, open agent harness for the terminal</title>
-<meta name="description" content="San is a fast, open terminal agent harness: one ~12 MB Go binary connecting models, tools, permissions, memory, persona bundles, skills, plugins, MCP, and subagents.">
-<meta property="og:title" content="San — Fast, open agent harness for the terminal">
-<meta property="og:description" content="One small Go binary. Bring any model and extension; San gives them a fast, inspectable agent loop in your terminal.">
+<title>Cube — Fast, open agent harness for the terminal</title>
+<meta name="description" content="Cube is a fast, open terminal agent harness: one ~12 MB Go binary connecting models, tools, permissions, memory, persona bundles, skills, plugins, MCP, and subagents.">
+<meta property="og:title" content="Cube — Fast, open agent harness for the terminal">
+<meta property="og:description" content="One small Go binary. Bring any model and extension; Cube gives them a fast, inspectable agent loop in your terminal.">
 <meta property="og:type" content="website">
 <meta property="og:url" content="https://genai-io.github.io/san/">
 <meta property="og:image" content="https://genai-io.github.io/san/san.png">
@@ -38,7 +38,7 @@
         </button>
         <div class="lang-menu" id="lang-menu" role="listbox"></div>
       </span>
-      <a class="nav-cta" href="https://github.com/genai-io/san">★ Star on GitHub</a>
+      <a class="nav-cta" href="https://github.com/suanova/cube">★ Star on GitHub</a>
     </div>
   </div>
 </nav>
@@ -47,31 +47,31 @@
   <div class="wrap">
     <div class="hero-head">
       <span class="kicker load-up d1">Open-source agent harness · Apache-2.0</span>
-      <h1 class="load-up d2">San — the open harness<br>for <span class="grad">terminal agents</span></h1>
+      <h1 class="load-up d2">Cube — the open harness<br>for <span class="grad">terminal agents</span></h1>
       <p class="sub load-up d3">One small Go binary — a fast, open harness that runs any model and extension in an inspectable, permission-gated loop.</p>
     </div>
 
     <div class="screen-frame load-up d4">
       <div class="intro-embed">
-        <iframe src="intro.html?theme=dark" title="San — animated intro" loading="lazy" allow="fullscreen"></iframe>
+        <iframe src="intro.html?theme=dark" title="Cube — animated intro" loading="lazy" allow="fullscreen"></iframe>
       </div>
     </div>
     <p class="intro-cap load-up d4"><a href="intro.html" target="_blank" rel="noopener">Watch full screen ↗</a></p>
 
     <div class="hero-actions load-up d5">
       <a class="btn btn-primary" href="getting-started.html">Get started →</a>
-      <a class="btn btn-ghost" href="https://github.com/genai-io/san">View on GitHub</a>
+      <a class="btn btn-ghost" href="https://github.com/suanova/cube">View on GitHub</a>
     </div>
 
     <div class="install-bar load-up d6">
       <span class="prompt">$</span>
-      <code id="install-cmd">curl -fsSL https://raw.githubusercontent.com/genai-io/san/main/install.sh | bash</code>
+      <code id="install-cmd">curl -fsSL https://raw.githubusercontent.com/suanova/cube/main/install.sh | bash</code>
       <button class="copy-btn" onclick="copyInstall(this)">Copy</button>
     </div>
 
     <div class="badges load-up d6">
-      <a href="https://github.com/genai-io/san/releases"><img src="https://img.shields.io/github/v/release/genai-io/san?style=flat-square&color=0d9488" alt="Release"></a>
-      <a href="https://github.com/genai-io/san/stargazers"><img src="https://img.shields.io/github/stars/genai-io/san?style=flat-square&color=14b8a6" alt="Stars"></a>
+      <a href="https://github.com/suanova/cube/releases"><img src="https://img.shields.io/github/v/release/suanova/cube?style=flat-square&color=0d9488" alt="Release"></a>
+      <a href="https://github.com/suanova/cube/stargazers"><img src="https://img.shields.io/github/stars/suanova/cube?style=flat-square&color=14b8a6" alt="Stars"></a>
       <img src="https://img.shields.io/badge/license-Apache%202.0-0b7d72?style=flat-square" alt="License">
     </div>
   </div>
@@ -150,7 +150,7 @@
       <span class="pill">⚙️ CI steps &amp; lifecycle hooks</span>
       <span class="pill">🔒 Air-gapped &amp; locked-down hosts</span>
     </div>
-    <p class="bench-note">No Node.js, no Python, no <code>node_modules</code>. <a href="https://github.com/genai-io/san/blob/main/docs/operations/footprint.md">Why small matters &amp; where it runs →</a></p>
+    <p class="bench-note">No Node.js, no Python, no <code>node_modules</code>. <a href="https://github.com/suanova/cube/blob/main/docs/operations/footprint.md">Why small matters &amp; where it runs →</a></p>
   </div>
 </section>
 
@@ -164,7 +164,7 @@
     <div class="bench-wrap reveal">
       <table>
         <thead>
-          <tr><th>Metric</th><th>San</th><th>Claude Code</th><th>Difference</th></tr>
+          <tr><th>Metric</th><th>Cube</th><th>Claude Code</th><th>Difference</th></tr>
         </thead>
         <tbody>
           <tr><td>Download size</td><td>12 MB</td><td>63 MB + Node 112 MB</td><td class="adv">5× smaller</td></tr>
@@ -176,7 +176,7 @@
         </tbody>
       </table>
     </div>
-    <p class="bench-note">San runs Claude Code's skills, plugins, and MCP unmodified — the gap is a native Go binary vs a Node.js runtime. <a href="https://github.com/genai-io/san/blob/main/docs/operations/benchmark.md">Reproduce the numbers →</a></p>
+    <p class="bench-note">Cube runs Claude Code's skills, plugins, and MCP unmodified — the gap is a native Go binary vs a Node.js runtime. <a href="https://github.com/suanova/cube/blob/main/docs/operations/benchmark.md">Reproduce the numbers →</a></p>
   </div>
 </section>
 
@@ -187,7 +187,7 @@
       <h2>Try it in 30 seconds</h2>
       <p>Open source under Apache 2.0. Star the repo if it's useful — it genuinely helps.</p>
       <div class="hero-actions">
-        <a class="btn btn-primary" href="https://github.com/genai-io/san">★ Star on GitHub</a>
+        <a class="btn btn-primary" href="https://github.com/suanova/cube">★ Star on GitHub</a>
         <a class="btn btn-ghost" href="getting-started.html">Get started</a>
       </div>
     </div>
@@ -207,7 +207,7 @@
         <p class="qr-cap">关注公众号「极客外传」· 回复 <span class="mono">san</span> 或 <span class="mono">三</span> 入群</p>
       </div>
       <div class="qr-card">
-        <img src="slack.png" alt="San Slack QR code" width="200" height="200" loading="lazy">
+        <img src="slack.png" alt="Cube Slack QR code" width="200" height="200" loading="lazy">
         <p class="qr-cap">Scan or <a href="https://join.slack.com/t/sanaico/shared_invite/zt-3zvfr8v6f-dchFpvpufY7fKA7tG7lhIg">join us on Slack</a></p>
       </div>
     </div>
@@ -216,11 +216,11 @@
 
 <footer>
   <div class="wrap">
-    <span class="brand">© <span id="year"></span> <span class="san">San 三</span> · Apache 2.0</span>
+    <span class="brand">© <span id="year"></span> <span class="san">Cube 三</span> · Apache 2.0</span>
     <span>
-      <a href="https://github.com/genai-io/san">GitHub</a> ·
-      <a href="https://github.com/genai-io/san/tree/main/docs">Docs</a> ·
-      <a href="https://github.com/genai-io/san/blob/main/CONTRIBUTING.md">Contributing</a>
+      <a href="https://github.com/suanova/cube">GitHub</a> ·
+      <a href="https://github.com/suanova/cube/tree/main/docs">Docs</a> ·
+      <a href="https://github.com/suanova/cube/blob/main/CONTRIBUTING.md">Contributing</a>
     </span>
   </div>
 </footer>

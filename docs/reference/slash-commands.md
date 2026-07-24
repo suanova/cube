@@ -19,7 +19,7 @@ Slash commands are typed directly in the TUI input box. They trigger local UI ac
 | `/agents` | Manage agents |
 | `/tokenlimit` | View / set token budget |
 | `/compact` | Compress conversation history |
-| `/init` | Create SAN.md and config files |
+| `/init` | Create CUBE.md and config files |
 | `/memory` | View / edit memory files |
 | `/mcp` | Manage MCP servers |
 | `/plugin` | Manage plugins |
@@ -48,9 +48,9 @@ Covered:
 TestHandlerRegistryMatchesBuiltinCommands — all 20 commands registered
 TestExecuteCommandExit                    — /exit returns quit command
 TestExecuteCommandUnknown                 — unknown commands show error message
-TestHandleInitCommand                     — /init creates .san/SAN.md file
-TestHandleInitCommand (local)             — /init local creates .san/SAN.local.md
-TestHandleInitCommand (rules)             — /init rules creates .san/rules directory
+TestHandleInitCommand                     — /init creates .cube/CUBE.md file
+TestHandleInitCommand (local)             — /init local creates .cube/CUBE.local.md
+TestHandleInitCommand (rules)             — /init rules creates .cube/rules directory
 TestHandleMemoryList                      — /memory list formats output with sections
 TestExecuteCommandLoopSchedulesRecurringPrompt
                                          — /loop recurring path is registered and handled
@@ -162,8 +162,8 @@ tmux send-keys -t t_cmds 'mkdir -p /tmp/init_test && cd /tmp/init_test && san' E
 sleep 2
 tmux send-keys -t t_cmds '/init' Enter
 sleep 3
-ls /tmp/init_test/.san/
-# Expected: SAN.md created under .san/
+ls /tmp/init_test/.cube/
+# Expected: CUBE.md created under .cube/
 
 # Test 9: Command suggestion dropdown
 tmux send-keys -t t_cmds C-c

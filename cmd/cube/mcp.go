@@ -15,15 +15,15 @@ import (
 var mcpCmd = &cobra.Command{
 	Use:   "mcp",
 	Short: "Manage MCP (Model Context Protocol) servers",
-	Long: `Manage MCP servers for extending San with external tools.
+	Long: `Manage MCP servers for extending Cube with external tools.
 
 MCP servers provide additional tools, resources, and prompts that can be used
 by the LLM during conversations.
 
 Configuration files are stored at:
-  ~/.san/mcp.json           User-level (global)
-  ./.san/mcp.json           Project-level (team shared)
-  ./.san/mcp.local.json     Local-level (personal, git-ignored)`,
+  ~/.cube/mcp.json          User-level (global)
+  ./.cube/mcp.json          Project-level (team shared)
+  ./.cube/mcp.local.json    Local-level (personal, git-ignored)`,
 }
 
 var (

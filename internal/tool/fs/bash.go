@@ -24,7 +24,10 @@ import (
 
 const (
 	IconBash      = "$"
-	cwdFileEnvVar = "SAN_CWD_FILE"
+	cwdFileEnvVar = "CUBE_CWD_FILE"
+	// legacyCwdFileEnvVar is the pre-fork name; still emitted so external
+	// tooling that reads $SAN_CWD_FILE keeps working.
+	legacyCwdFileEnvVar = "SAN_CWD_FILE"
 )
 
 // BashTool executes shell commands
@@ -93,7 +96,7 @@ func (t *BashTool) ExecuteApproved(ctx context.Context, params map[string]any, c
 	cmd.Dir = cwd
 	cmd.Env = bashEnv(ctx)
 	if trackedFile != "" {
-		cmd.Env = append(cmd.Env, cwdFileEnvVar+"="+trackedFile)
+		cmd.Env = append(cmd.Env, cwdFileEnvVar+"="+trackedFile, legacyCwdFileEnvVar+"="+trackedFile)
 	}
 
 	if responder := tool.BashPromptResponderFromContext(ctx); responder != nil {

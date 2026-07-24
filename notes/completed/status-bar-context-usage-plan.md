@@ -1139,7 +1139,7 @@ If gofmt lists files, run `gofmt -w <file>` and amend the relevant commit (or ne
 
 - [ ] **Step 3: Build the binary**
 
-Run: `go build -o /tmp/san-statusbar ./cmd/san`
+Run: `go build -o /tmp/cube-statusbar ./cmd/cube`
 Expected: clean build.
 
 - [ ] **Step 4: Manual smoke at three widths**

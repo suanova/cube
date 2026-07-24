@@ -1,5 +1,5 @@
 // Export / Import sub-views for the /autopilot panel. Export names the current
-// config and writes it as a preset under ~/.san/autopilot/<name>.json; Import
+// config and writes it as a preset under ~/.cube/autopilot/<name>.json; Import
 // lists those presets and loads the chosen one into the working buffer. Both are
 // a shared, non-session space so a copilot config can be reused and shared.
 package input

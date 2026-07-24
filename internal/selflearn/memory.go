@@ -43,7 +43,7 @@ const DefaultMemoryFileCharLimit = setting.SelfLearnMaxMemoryKB * 1024
 
 // MemoryStore is the project-partitioned durable memory written by the L1
 // fork and read back via system.LoadMemoryFiles. Lives under
-// ~/.san/projects/<encoded-cwd>/memory/ — machine-local, out of the repo
+// ~/.cube/projects/<encoded-cwd>/memory/ — machine-local, out of the repo
 // (§4). Entries are delimited; add/replace/remove locate one by a unique
 // substring. Writes are atomic and re-read under the mutex.
 // Cross-process safety is best-effort (atomic rename only).

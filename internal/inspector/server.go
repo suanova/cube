@@ -31,7 +31,7 @@ const replayCacheCapacity = 64
 
 // Server hosts the trace viewer for a single project directory.
 type Server struct {
-	projectDir string // .../.san/projects/<encoded-cwd>
+	projectDir string // .../.cube/projects/<encoded-cwd>
 	mux        *http.ServeMux
 	store      *transcript.FileStore // shared with the writer; reads use the index
 

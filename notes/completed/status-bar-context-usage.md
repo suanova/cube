@@ -245,7 +245,7 @@ Existing tests that should pass unchanged: anything touching
 - [x] `/reset` returns the bar to `0%` and clears the compressions badge.
 - [x] Switching models updates the denominator within one turn.
 - [x] `🗜️ N` appears only after the first compact, never at session start.
-- [x] `go test ./internal/app/...` is green. *(Full `go test ./...` green; `go vet` clean; `go build ./cmd/san` clean; gofmt clean.)*
+- [x] `go test ./internal/app/...` is green. *(Full `go test ./...` green; `go vet` clean; `go build ./cmd/cube` clean; gofmt clean.)*
 
 ## Files touched
 

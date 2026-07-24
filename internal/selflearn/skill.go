@@ -59,8 +59,8 @@ func AllowAllSkillActions() SkillPermissions {
 type SkillWriteObserver func(action, name, note string)
 
 // SkillManager is the L1-only skill write surface. Skills live directly in
-// san's existing user/project scopes — ~/.san/skills/<name>/ and
-// ./.san/skills/<name>/ — distinguished by the origin frontmatter field, not a
+// Cube's existing user/project scopes — ~/.cube/skills/<name>/ and
+// ./.cube/skills/<name>/ — distinguished by the origin frontmatter field, not a
 // subdirectory.
 type SkillManager struct {
 	userDir    string
@@ -121,8 +121,8 @@ func (i SkillInfo) Editable() bool { return i.Origin == agentOrigin }
 //
 // Why the disk scan instead of consulting skill.Registry: the registry is
 // initialized once at startup and only refreshed on
-// ReloadAfterPluginChange. The L1 reviewer mutates ~/.san/skills and
-// ./.san/skills mid-session via skill_manage; a registry-backed Inventory
+// ReloadAfterPluginChange. The L1 reviewer mutates ~/.cube/skills and
+// ./.cube/skills mid-session via skill_manage; a registry-backed Inventory
 // would not see skills the reviewer just created in earlier passes, which
 // would cause it to re-create duplicates. Reading the on-disk state
 // directly is the correct freshness for this caller.

@@ -6,10 +6,10 @@
 
 ## 背景
 
-当前 San 项目（`genai-io/san`）的开发依赖人来驱动 Agent：
+当前 Cube 项目（`genai-io/san`）的开发依赖人来驱动 Agent：
 人在每个会话中手动控制 Agent，不能自动管理整个项目的 issues、feature 和 bug。
 
-目标是把 San 项目变成一个**由 AI 自主管理的项目**：
+目标是把 Cube 项目变成一个**由 AI 自主管理的项目**：
 人只需要告诉系统"要实现什么功能"或"修复所有 Bug"，
 剩下的由一组 Persona 自动协同完成 —— 拆解需求、设计架构、
 编码实现、验证测试、最终发布。人不再写代码，只提需求。
@@ -17,7 +17,7 @@
 ## 核心模型
 
 在 Org（`genai-io`）下新建一个独立的 Repo
-`san-team`，专门存放 San 开发团队的 Persona。
+`san-team`，专门存放 Cube 开发团队的 Persona。
 每个团队是一组为特定项目协同工作的 Persona。
 
 每个 Persona 就是一个 Persona 目录，
@@ -25,8 +25,8 @@
 
 ```
 genai-io（Org，已存在）
-├── san              ← San 源码仓库（已存在，被管理的目标项目）
-└── san-team         ← 新建的仓库（San 开发团队 Persona）
+├── cube             ← Cube 源码仓库（已存在，被管理的目标项目）
+└── san-team         ← 新建的仓库（Cube 开发团队 Persona）
     ├── leader/
     │   ├── system/
     │   │   ├── identity.md
@@ -61,11 +61,11 @@ genai-io（Org，已存在）
         └── settings.json
 ```
 
-- **`san-team`**：新建仓库，包含 San 项目的开发团队。
+- **`san-team`**：新建仓库，包含 Cube 项目的开发团队。
   Persona 直接放在仓库根目录下。如果其他项目需要类似的自主管理，
   可以创建独立的团队仓库（如 `devops-team`）。
 - **团队（Team）**：`san-team` 仓库中的一组 Persona，
-  为特定目标协同工作 —— 管理 San 项目的 issue、feature、bug 和发布。
+  为特定目标协同工作 —— 管理 Cube 项目的 issue、feature、bug 和发布。
 - **Persona 目录**：每个 Persona 遵循 persona 规范的三层结构：
   1. `system/` — 系统提示词，拆为 `identity`（是谁）、`behavior`（怎么做事）、`rules`（遵守什么规则）三个可替换的 md 文件，第四个 `environment` 由运行时计算
   2. `skills/` — 该 Persona 专属的技能，启动时自动激活
@@ -73,23 +73,23 @@ genai-io（Org，已存在）
 
 ## 运行模型
 
-每个 Persona 以**独立的 San 实例**运行：
+每个 Persona 以**独立的 Cube 实例**运行：
 
 ```bash
 # 启动 Leader Persona（管理员交互入口）
-san start --persona leader --team san-team
+cube start --persona leader --team san-team
 
 # 启动 Dev Persona（等待编码任务）
-san start --persona dev --team san-team
+cube start --persona dev --team san-team
 
 # 启动 QE Persona（等待验证任务）
-san start --persona qe --team san-team
+cube start --persona qe --team san-team
 
 # 启动 Release Persona（等待发布任务）
-san start --persona release --team san-team
+cube start --persona release --team san-team
 ```
 
-`--persona` 参数告诉 San 在启动时加载哪个 Persona 目录的配置
+`--persona` 参数告诉 Cube 在启动时加载哪个 Persona 目录的配置
 （system/ + skills/ + settings.json），不需要在运行中通过 `/persona` 命令切换。
 
 多个 Persona 实例可以同时运行在不同的终端、容器或机器上。
@@ -118,7 +118,7 @@ san start --persona release --team san-team
           ▼        ▼        ▼
     ┌──────────┐ ┌──────┐ ┌─────────┐
     │Dev│ │  QE  │ │ Release │
-    │ san start│ │san start│ │san start│
+    │cube start│ │cube start│ │cube start│
     │ --persona│ │--persona│ │--persona│
     │dev│ │  qe    │ │ release │
     └──────────┘ └──────┘ └─────────┘
@@ -126,19 +126,19 @@ san start --persona release --team san-team
 
 ### Leader Persona —— 唯一入口
 
-Leader 通过 `san start --persona leader --team san-team` 启动，
+Leader 通过 `cube start --persona leader --team san-team` 启动，
 是管理员唯一的交互界面。管理员告诉 Leader 要做什么，
 Leader 负责：
 
 1. **理解需求**：新功能？Bug 修复？重构？
-2. **分析 San 项目**：读取 San 源码仓库中的设计文档和现有代码
+2. **分析 Cube 项目**：读取 Cube 源码仓库中的设计文档和现有代码
 3. **可视化**：画 mermaid 架构图、状态图，向管理员确认理解
 4. **拆解**：把功能拆成多个 Task，写入共享工作队列
 5. **监控**：跟踪队列中 Task 的状态变化
 6. **汇报**：收集完成结果，向管理员汇总
 
 Leader 不自己写代码。Leader 把 Task 写入队列后，
-由对应 Persona 的 San 实例自动领取执行。
+由对应 Persona 的 Cube 实例自动领取执行。
 
 ```
 Leader 派发编码任务示例：
@@ -146,7 +146,7 @@ Leader 派发编码任务示例：
 Leader:
   1. 分析需求后，确定 Task-3 是编码任务
   2. 将 Task-3 写入队列（标记 role: dev）
-  3. Dev San 实例轮询队列，发现 Task-3 匹配自己的角色
+  3. Dev Cube 实例轮询队列，发现 Task-3 匹配自己的角色
   4. Dev 认领 Task-3，开始实现
   5. 完成后更新队列状态为 done，附上 PR 链接
   6. Leader 轮询发现 Task-3 已完成，继续下一步
@@ -154,11 +154,11 @@ Leader:
 
 ### Dev Persona —— 编码实现
 
-通过 `san start --persona dev --team san-team` 启动，
+通过 `cube start --persona dev --team san-team` 启动，
 持续轮询队列中的编码任务：
 
 1. 从队列认领 role 为 dev 的 Task
-2. 读取 San 项目的设计文档和现有代码
+2. 读取 Cube 项目的设计文档和现有代码
 3. 遵循分层架构规范写代码
 4. 写测试
 5. 跑 `make test` + `make lint` 通过
@@ -167,7 +167,7 @@ Leader:
 
 ### QE Persona —— 验证测试
 
-通过 `san start --persona qe --team san-team` 启动，
+通过 `cube start --persona qe --team san-team` 启动，
 持续轮询队列中的验证任务：
 
 1. 从队列认领 role 为 qe 的 Task（对应 Dev 已完成）
@@ -181,7 +181,7 @@ Leader:
 
 ### Release Persona —— 发布上线
 
-通过 `san start --persona release --team san-team` 启动：
+通过 `cube start --persona release --team san-team` 启动：
 
 1. 从队列认领 role 为 release 的 Task（全部 QE 通过后）
 2. 生成 CHANGELOG
@@ -225,9 +225,9 @@ pending ──→ claimed ──→ done ──→ verified
 ### system/identity.md（Who am I?）
 
 ```markdown
-你是 San 项目的开发 Agent。
+你是 Cube 项目的开发 Agent。
 你的职责是从共享队列领取编码任务并完成实现。
-你擅长 Go 开发，熟悉 San 的五层包架构。
+你擅长 Go 开发，熟悉 Cube 的五层包架构。
 ```
 
 ### system/behavior.md（How do I act?）
@@ -274,7 +274,7 @@ pending ──→ claimed ──→ done ──→ verified
 
 ```json
 {
-  "description": "San 项目开发 Persona，负责编码和 PR 提交",
+  "description": "Cube 项目开发 Persona，负责编码和 PR 提交",
   "model": "claude-sonnet-4-6",
   "maxSteps": 80,
   "skills": {
@@ -303,7 +303,7 @@ pending ──→ claimed ──→ done ──→ verified
 ### Leader 的 system/identity.md
 
 ```markdown
-你是 San 项目的 Leader Agent，是管理员唯一的交互入口。
+你是 Cube 项目的 Leader Agent，是管理员唯一的交互入口。
 你负责理解需求、分析项目、画架构图、拆解任务并写入共享队列。
 你自己不写业务代码，你的职责是规划、编排和决策。
 ```
@@ -312,7 +312,7 @@ pending ──→ claimed ──→ done ──→ verified
 
 ```json
 {
-  "description": "San 项目 Leader Persona，管理员的唯一入口",
+  "description": "Cube 项目 Leader Persona，管理员的唯一入口",
   "model": "claude-opus-4-7",
   "maxSteps": 200,
   "skills": {},
@@ -339,7 +339,7 @@ pending ──→ claimed ──→ done ──→ verified
 
 ### 1. Leader 理解需求 + 画架构图
 
-Leader 读取 San 项目的 `docs/design/`，分析已有代码，
+Leader 读取 Cube 项目的 `docs/design/`，分析已有代码，
 生成 mermaid 时序图：
 
 ```mermaid
@@ -380,20 +380,20 @@ Leader 展示图给管理员："这是我理解的功能流程，对吗？"
 ### 3. 各 Persona 自动领取执行
 
 ```
-Dev San 实例轮询队列：
+Dev Cube 实例轮询队列：
   认领 Task 1 → 实现 → 标记 done
   认领 Task 2 → 实现 → 标记 done
   认领 Task 3 → 实现 → 标记 done
   认领 Task 4 → 实现 → 标记 done
 
-QE San 实例轮询队列：
+QE Cube 实例轮询队列：
   发现 Task 1-4 均为 done → 认领 Task 5
   检出 PR 分支 → 跑测试 → 通过 → 标记 verified
 
 Leader 监控到全部 verified → 通知管理员 approve PR
 管理员审批通过后 → Leader 写入 Task 6
 
-Release San 实例轮询队列：
+Release Cube 实例轮询队列：
   认领 Task 6 → 生成 CHANGELOG → 打 tag → 标记 done
 
 Leader → 管理员: "认证功能已全部完成并发布，PR: #1234"
@@ -405,22 +405,22 @@ Leader → 管理员: "认证功能已全部完成并发布，PR: #1234"
 
 ```
 Leader:
-  1. 通过 GhCLI 拉取 San 项目所有 P0 Bug issues
+  1. 通过 GhCLI 拉取 Cube 项目所有 P0 Bug issues
   2. 逐个分析，写入队列：
      - { role: dev, title: "修复 #100 nil pointer in auth.go" }
      - { role: dev, title: "修复 #102 timeout in db query" }
 
-Dev San 实例：
+Dev Cube 实例：
   认领 "#100" → 分析根因 → 修复 → PR → 标记 done
   认领 "#102" → 分析根因 → 修复 → PR → 标记 done
 
-QE San 实例：
+QE Cube 实例：
   认领 "#100 验证" → 测试 → Review PR → 通过 → 标记 verified
   认领 "#102 验证" → 测试 → Review PR → 通过 → 标记 verified
 
 Leader 通知管理员 approve → 管理员审批通过
 
-Release San 实例：
+Release Cube 实例：
   认领 "hotfix 发布" → 生成 CHANGELOG → 打 tag → 标记 done
 
 Leader → 管理员: "2 个 P0 Bug 已全部修复并发布"
@@ -432,11 +432,11 @@ Leader → 管理员: "2 个 P0 Bug 已全部修复并发布"
 
 Persona 遵循 [`persona-system.md`](../../notes/active/persona-system.md) 中定义的 persona 规范。
 每个 Persona 是一个文件夹，包含 `system/`（拆为 identity/behavior/rules/environment 四部分）、
-`skills/`、`settings.json`。缺失部分自动回退到 San 内置默认值。
+`skills/`、`settings.json`。缺失部分自动回退到 Cube 内置默认值。
 
 ### 2. Persona 存于独立的 `san-team` 仓库
 
-Persona 定义放在独立仓库 `san-team`，与 San 源码仓库分离：
+Persona 定义放在独立仓库 `san-team`，与 Cube 源码仓库分离：
 - Persona 配置独立版本管理
 - 可以对 san-team 仓库设置不同的访问权限
 - 团队 Persona 可以管理多个目标仓库（未来扩展）
@@ -448,10 +448,10 @@ Persona 定义放在独立仓库 `san-team`，与 San 源码仓库分离：
 - Leader 有全局视角，决定优先级和冲突处理
 - 其他 Persona 只关注队列中的任务，无需理解全局
 
-### 4. 每个 Persona 是独立的 San 实例
+### 4. 每个 Persona 是独立的 Cube 实例
 
 不是通过 Agent 工具嵌套调用子 Agent，而是每个 Persona 启动一个独立的
-San 进程（`san start --persona <name> --team <team>`）：
+Cube 进程（`cube start --persona <name> --team <team>`）：
 - 进程级隔离：每个 Persona 有独立的上下文、工具集、权限
 - 可以部署在不同机器/容器上，独立扩缩
 - 通过共享工作队列（文件）协调，不需要进程间 RPC
@@ -503,7 +503,7 @@ Task 完成 → Persona 写复盘记录 → 发现可改进项
 | 新概念 | 对应现有 / 规划中的机制 |
 |---|---|
 | Persona 目录 | Persona 目录（`persona-system.md` 规范） |
-| `san start --persona` | 启动时指定 persona，避免启动后热切换 |
+| `cube start --persona` | 启动时指定 persona，避免启动后热切换 |
 | 共享工作队列 | 新增：文件系统 JSONL 队列（`state/queue.jsonl`） |
 | Persona 通信 | 通过队列轮询，无需进程间 RPC |
 | Persona 权限 | settings.json 中 permissions（deny 只增不减） |
@@ -516,9 +516,9 @@ Task 完成 → Persona 写复盘记录 → 发现可改进项
 - 按 persona 规范编写四套 Persona（leader/dev/qe/release）
 - 每套包含 `system/{identity,behavior,rules}.md` + `skills/` + `settings.json`
 
-### 阶段二：`san start --persona` 功能
+### 阶段二：`cube start --persona` 功能
 
-- San CLI 新增 `--persona` 和 `--team` 参数
+- Cube CLI 新增 `--persona` 和 `--team` 参数
 - 启动时加载指定团队下的 Persona 配置
 - 加载 system/ 文件作为系统提示词
 - 加载 skills/ 作为活跃技能
@@ -544,7 +544,7 @@ Task 完成 → Persona 写复盘记录 → 发现可改进项
 
 - Cron 定时 Bug 扫描 → 自动写入队列
 - 设计文档合并后自动触发 Leader 拆解
-- 进度可视化（CLI：`san team status`）
+- 进度可视化（CLI：`cube team status`）
 - Persona 实例健康监控
 
 ## 参考技能
@@ -588,12 +588,12 @@ Task 完成 → Persona 写复盘记录 → 发现可改进项
 ### 如何集成
 
 1. **直接复用**：将对应仓库的 `.claude/skills/` 目录拷贝到 Persona 的 `skills/` 目录下
-2. **参考设计**：提取其 Agent 分离、对抗式验证、多阶段审查等模式，重写为适合 San 项目的版本
+2. **参考设计**：提取其 Agent 分离、对抗式验证、多阶段审查等模式，重写为适合 Cube 项目的版本
 3. **优先级**：社区技能（marketplace scope）优先级低于项目自定义技能，需要 Leader 审批后启用
 
 ## 已决策补充
 
-1. **多 Dev 并行**：每个 Dev San 实例使用独立的 git worktree
+1. **多 Dev 并行**：每个 Dev Cube 实例使用独立的 git worktree
    工作，各自提交 PR。如果多个 PR 修改同一文件，由 GitHub 的 merge conflict
    机制处理。Leader 发现冲突时重新分配修复任务。
 2. **Leader 合并权限**：所有代码必须由管理员手动 approve 才能合并，不允许自动 merge。

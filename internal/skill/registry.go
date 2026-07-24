@@ -24,7 +24,7 @@ func NewRegistry() *Registry {
 type Registry struct {
 	mu           sync.RWMutex
 	skills       map[string]*Skill
-	userStore    *Store // User-level store (~/.san/skills.json)
+	userStore    *Store // User-level store (~/.cube/skills.json)
 	projectStore *Store // Project-level store (.san/skills.json)
 	cwd          string // Current working directory for project store
 
@@ -77,7 +77,7 @@ func NewStore(path string) (*Store, error) {
 	return store, nil
 }
 
-// NewUserStore creates a store for user-level settings (~/.san/skills.json).
+// NewUserStore creates a store for user-level settings (~/.cube/skills.json).
 func NewUserStore() (*Store, error) {
 	homeDir, err := os.UserHomeDir()
 	if err != nil {
@@ -232,7 +232,7 @@ func (r *Registry) GetActive() []*Skill {
 
 // SetState sets the state for a skill and persists it to the specified level.
 // The name should be the full name (namespace:name or just name).
-// If userLevel is true, saves to ~/.san/skills.json, otherwise to .san/skills.json.
+// If userLevel is true, saves to ~/.cube/skills.json, otherwise to .cube/skills.json.
 func (r *Registry) SetState(name string, state SkillState, userLevel bool) error {
 	r.mu.Lock()
 	skill, ok := r.skills[name]

@@ -28,7 +28,7 @@ const (
 )
 
 // AutoMemoryDir is the project-partitioned directory backing the agent-written
-// auto-memory store: ~/.san/projects/<encoded-cwd>/memory/. It shares the
+// auto-memory store: ~/.cube/projects/<encoded-cwd>/memory/. It shares the
 // project partitioning used by the session transcript store, so worktrees and
 // subdirectories of one repo resolve to the same store.
 func AutoMemoryDir(cwd string) string {
@@ -82,7 +82,7 @@ func ResolveAutoMemoryDir(cwd, override string) string {
 // resolve it with ResolveAutoMemoryDir so a user-configured memory path is
 // honored (the reviewer prompt and the main-agent memory reminder both do).
 // Capped at autoMemoryByteCap. It is a distinct source from LoadMemoryFiles:
-// agent-written memory and user-authored SAN.md/CLAUDE.md instructions are
+// agent-written memory and user-authored CUBE.md/CLAUDE.md instructions are
 // injected as separate blocks and never mixed. Returns ("", false) when the
 // store is empty or absent. When the index exceeds the cap it is truncated on
 // a line boundary with a marker — topic files are read on demand and never
@@ -148,6 +148,7 @@ func LoadMemoryFiles(cwd string) []MemoryFile {
 
 	userDir := confdir.Dir(homeDir)
 	userSources := []string{
+		filepath.Join(userDir, "CUBE.md"),
 		filepath.Join(userDir, "SAN.md"),
 		filepath.Join(homeDir, ".claude", "CLAUDE.md"),
 	}
@@ -160,7 +161,9 @@ func LoadMemoryFiles(cwd string) []MemoryFile {
 
 	projectDir := confdir.Dir(cwd)
 	projectSources := []string{
+		filepath.Join(projectDir, "CUBE.md"),
 		filepath.Join(projectDir, "SAN.md"),
+		filepath.Join(cwd, "CUBE.md"),
 		filepath.Join(cwd, "SAN.md"),
 		filepath.Join(cwd, ".claude", "CLAUDE.md"),
 		filepath.Join(cwd, "CLAUDE.md"),
@@ -173,6 +176,7 @@ func LoadMemoryFiles(cwd string) []MemoryFile {
 	files = append(files, loadRulesDirectory(projectRulesDir, "project", seen)...)
 
 	localSources := []string{
+		filepath.Join(projectDir, "CUBE.local.md"),
 		filepath.Join(projectDir, "SAN.local.md"),
 	}
 	if f := loadMemoryFile(localSources, "local", seen); f != nil {
@@ -306,18 +310,22 @@ func GetAllMemoryPaths(cwd string) MemoryPaths {
 	homeDir, _ := os.UserHomeDir()
 	return MemoryPaths{
 		Global: []string{
+			filepath.Join(confdir.Dir(homeDir), "CUBE.md"),
 			filepath.Join(confdir.Dir(homeDir), "SAN.md"),
 			filepath.Join(homeDir, ".claude", "CLAUDE.md"),
 		},
 		GlobalRules: filepath.Join(confdir.Dir(homeDir), "rules"),
 		Project: []string{
+			filepath.Join(confdir.Dir(cwd), "CUBE.md"),
 			filepath.Join(confdir.Dir(cwd), "SAN.md"),
+			filepath.Join(cwd, "CUBE.md"),
 			filepath.Join(cwd, "SAN.md"),
 			filepath.Join(cwd, ".claude", "CLAUDE.md"),
 			filepath.Join(cwd, "CLAUDE.md"),
 		},
 		ProjectRules: filepath.Join(confdir.Dir(cwd), "rules"),
 		Local: []string{
+			filepath.Join(confdir.Dir(cwd), "CUBE.local.md"),
 			filepath.Join(confdir.Dir(cwd), "SAN.local.md"),
 		},
 	}

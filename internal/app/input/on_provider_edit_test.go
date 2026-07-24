@@ -11,7 +11,7 @@ import (
 )
 
 // isolateSecretStore points the secret store at a throwaway HOME so tests never
-// read or write the developer's real ~/.san/secrets.json. secret.Default() is a
+// read or write the developer's real ~/.cube/secrets.json. secret.Default() is a
 // sync.Once singleton, so it must be reset around each test.
 func isolateSecretStore(t *testing.T) {
 	t.Helper()

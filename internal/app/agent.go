@@ -122,7 +122,7 @@ func (m *model) buildAgentParams() agent.BuildParams {
 	// hot-swap it mid-session; the closures below Load it per call.
 	m.rebuildAutopilotReviewer()
 
-	// Stream timeout overrides. Priority: SAN_* env var > settings.json > core
+	// Stream timeout overrides. Priority: CUBE_* env var > settings.json > core
 	// default (zero value => core picks FirstChunkTimeout=5m, IdleTimeout=60s).
 	streamFirstChunk := firstValidDuration(
 		setting.Getenv("STREAM_FIRST_CHUNK_TIMEOUT"),

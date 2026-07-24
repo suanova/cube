@@ -31,7 +31,7 @@ import (
 
 // selfLearnDisableEnvSuffix is the env kill switch (§3.1) — mirrors Claude
 // Code's CLAUDE_CODE_DISABLE_AUTO_MEMORY. Read via setting.Getenv as
-// SAN_DISABLE_SELF_LEARN.
+// CUBE_DISABLE_SELF_LEARN (falling back to the legacy SAN_DISABLE_SELF_LEARN).
 const selfLearnDisableEnvSuffix = "DISABLE_SELF_LEARN"
 
 // learnedStoreContext is the live workspace source behind the /evolve panel:

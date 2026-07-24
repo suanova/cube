@@ -2,7 +2,7 @@
 
 The **Inspector** is a local web UI for exploring and debugging san code
 session transcripts. It reads the JSONL transcript files stored under
-`~/.san/projects/` and presents every event — user messages, model
+`~/.cube/projects/` and presents every event — user messages, model
 responses, tool calls, system events, and harness state — as an
 inspectable timeline. Think of it as "conversation forensics" for your
 agent runs.
@@ -12,7 +12,7 @@ agent runs.
 ## Quick Start
 
 ```bash
-san inspector
+cube inspector
 ```
 
 This starts a localhost-only web server on a random port and opens the
@@ -20,10 +20,10 @@ inspector in your default browser. Press `Ctrl-C` to stop.
 
 ```bash
 # Pin a specific port
-san inspector --addr 127.0.0.1:38080
+cube inspector --addr 127.0.0.1:38080
 
 # Print the URL but don't open the browser
-san inspector --no-open
+cube inspector --no-open
 ```
 
 > **Security note:** The inspector binds to loopback addresses only
@@ -68,7 +68,7 @@ hidden fields.
 At any record, you can open the **System Prompt overlay** to see the
 full system prompt that was active at that moment. This includes all
 sections injected by the harness: personas, skills, project memory
-(`SAN.md` / `CLAUDE.md`), and MCP server prompts. (Tool schemas are not
+(`CUBE.md` / `CLAUDE.md`), and MCP server prompts. (Tool schemas are not
 part of the system prompt — see Replay State below for those.)
 
 ### Replay State
@@ -115,9 +115,9 @@ in the header reads **recording** while the stream is connected.
 
 ## How It Works
 
-1. `san inspector` starts an HTTP server bound to loopback.
+1. `cube inspector` starts an HTTP server bound to loopback.
 2. The server reads transcript JSONL files from
-   `~/.san/projects/<encoded-cwd>/transcripts/`.
+   `~/.cube/projects/<encoded-cwd>/transcripts/`.
 3. The embedded SPA (single-page application) fetches session lists and
    records via a REST API, and subscribes to live updates via SSE.
 4. The **replay engine** (`replay.go`) walks the event log from the

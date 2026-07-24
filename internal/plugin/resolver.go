@@ -10,17 +10,23 @@ import (
 )
 
 const (
-	// EnvPluginRoot is the variable for plugin root directory
-	EnvPluginRoot = "SAN_PLUGIN_ROOT"
+	// EnvPluginRoot is the canonical variable for a plugin root directory.
+	EnvPluginRoot = "CUBE_PLUGIN_ROOT"
+
+	// legacyEnvPluginRoot is the pre-fork name; plugin manifests may still
+	// reference ${SAN_PLUGIN_ROOT}, so it is kept as an expansion alias.
+	legacyEnvPluginRoot = "SAN_PLUGIN_ROOT"
 
 	// EnvClaudePluginRoot is Claude Code's plugin root variable
 	EnvClaudePluginRoot = "CLAUDE_PLUGIN_ROOT"
 )
 
-// ExpandPluginRoot replaces ${SAN_PLUGIN_ROOT} (and the ${CLAUDE_PLUGIN_ROOT}
-// alias) in the given string with the actual plugin path.
+// ExpandPluginRoot replaces ${CUBE_PLUGIN_ROOT} (and the legacy
+// ${SAN_PLUGIN_ROOT} and ${CLAUDE_PLUGIN_ROOT} aliases) in the given string
+// with the actual plugin path.
 func ExpandPluginRoot(s string, pluginPath string) string {
 	s = strings.ReplaceAll(s, "${"+EnvPluginRoot+"}", pluginPath)
+	s = strings.ReplaceAll(s, "${"+legacyEnvPluginRoot+"}", pluginPath)
 	s = strings.ReplaceAll(s, "${"+EnvClaudePluginRoot+"}", pluginPath)
 	return s
 }

@@ -434,11 +434,11 @@ func TestPersona_SettingsWithSkillStates(t *testing.T) {
 // CLI --persona flag tests
 // ============================================================
 
-// buildBinary compiles the san binary into a temp file.
+// buildBinary compiles the cube binary into a temp file.
 func buildBinary(t *testing.T) string {
 	t.Helper()
-	bin := filepath.Join(t.TempDir(), "san-test")
-	cmd := exec.Command("go", "build", "-o", bin, "./cmd/san")
+	bin := filepath.Join(t.TempDir(), "cube-test")
+	cmd := exec.Command("go", "build", "-o", bin, "./cmd/cube")
 	cmd.Dir = projectRoot(t)
 	out, err := cmd.CombinedOutput()
 	if err != nil {
@@ -491,7 +491,7 @@ func TestCLI_HelpShowsPersonaFlag(t *testing.T) {
 	cmd := exec.Command(bin, "help")
 	out, err := cmd.Output()
 	if err != nil {
-		t.Fatalf("san help exited with error: %v", err)
+		t.Fatalf("cube help exited with error: %v", err)
 	}
 
 	output := string(out)

@@ -799,8 +799,8 @@ func requireNpx(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping real MCP server test in short mode")
 	}
-	if os.Getenv("SAN_RUN_REAL_MCP") != "1" {
-		t.Skip("set SAN_RUN_REAL_MCP=1 to run real MCP server tests")
+	if os.Getenv("CUBE_RUN_REAL_MCP") != "1" && os.Getenv("SAN_RUN_REAL_MCP") != "1" {
+		t.Skip("set CUBE_RUN_REAL_MCP=1 to run real MCP server tests")
 	}
 	// Check npx is available
 	if _, err := exec.LookPath("npx"); err != nil {

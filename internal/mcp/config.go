@@ -12,8 +12,8 @@ import (
 
 // ConfigLoader handles loading MCP configuration from multiple sources
 type ConfigLoader struct {
-	userDir    string // ~/.san
-	projectDir string // ./.san or cwd
+	userDir    string // ~/.cube (falls back to ~/.cube)
+	projectDir string // ./.cube (or ./.san) or cwd
 }
 
 // NewConfigLoader creates a new configuration loader
@@ -37,9 +37,9 @@ func NewConfigLoaderForTest(baseDir string) *ConfigLoader {
 
 // LoadAll loads and merges MCP configurations from all sources.
 // Priority (lowest to highest):
-//  1. ~/.san/mcp.json (user scope)
-//  2. ./.san/mcp.json (project scope)
-//  3. ./.san/mcp.local.json (local scope)
+//  1. ~/.cube/mcp.json (user scope; falls back to ~/.cube/mcp.json)
+//  2. ./.cube/mcp.json (project scope)
+//  3. ./.cube/mcp.local.json (local scope)
 func (l *ConfigLoader) LoadAll() (map[string]ServerConfig, error) {
 	servers := make(map[string]ServerConfig)
 
@@ -197,16 +197,20 @@ func configSourceFromFilePath(filePath string) string {
 	case "mcp.local.json":
 		return "local_settings"
 	case "mcp.json":
-		// A user-level mcp.json lives at ~/.san/mcp.json. Check it before the
-		// project-settings fallthrough, since a project path <cwd>/.san/mcp.json
-		// also contains "/.san/".
+		// A user-level mcp.json lives at ~/.cube/mcp.json (or ~/.cube/mcp.json
+		// for a legacy install). Check it before the project-settings
+		// fallthrough, since a project path <cwd>/.cube/mcp.json also contains
+		// "/.cube/".
 		if homeDir, err := os.UserHomeDir(); err == nil {
-			if cleanPath == filepath.Clean(filepath.Join(homeDir, confdir.Name, "mcp.json")) {
-				return "user_settings"
+			for _, name := range []string{confdir.Name, confdir.LegacyName} {
+				if cleanPath == filepath.Clean(filepath.Join(homeDir, name, "mcp.json")) {
+					return "user_settings"
+				}
 			}
 		}
 		sep := string(filepath.Separator)
-		if strings.Contains(cleanPath, sep+confdir.Name+sep) {
+		if strings.Contains(cleanPath, sep+confdir.Name+sep) ||
+			strings.Contains(cleanPath, sep+confdir.LegacyName+sep) {
 			return "project_settings"
 		}
 		return "user_settings"

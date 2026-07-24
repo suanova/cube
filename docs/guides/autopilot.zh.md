@@ -2,14 +2,14 @@
 
 ## 概览
 
-Autopilot 是 San 的自动驾驶系统,旨在最大限度减少人工介入:由一个 copilot
+Autopilot 是 Cube 的自动驾驶系统,旨在最大限度减少人工介入:由一个 copilot
 模型对会话进行巡航,让例行工作持续推进,只在真正需要人的时刻交还控制权。
 它通过一组可独立启用的介入点(**steer**)行动 —— 提议下一步、放行灰区
 工具调用、回答命令的交互问询、回答 `AskUserQuestion`,以及在回合结束后朝
 mission 继续推进。默认仅开启灰区权限判定。
 
 用 `shift+tab` 切换到 Autopilot 模式(循环到琥珀色的 `⏵⏵ autopilot on`),
-用 `/autopilot` 面板配置。恢复会话(`san -r <id>`)会回到保存时所在的模式。
+用 `/autopilot` 面板配置。恢复会话(`cube -r <id>`)会回到保存时所在的模式。
 只想先看它跑起来的话,[`/goal`](#goal) 是最短的入口 —— 它就是下面这一整套的
 一个预设。
 
@@ -104,7 +104,7 @@ steer 都读它:推进类 steer(Suggest、Question、End)朝它开 —— 没交
 两分钟跑通完整闭环 —— 起步、灰区放行、自动续跑、目标达成 ——
 全程不触碰临时目录以外的任何东西。
 
-**1. 在一个空仓库里启动 San。** 只在那里跑 —— 下面这条 goal 会在启动目录下直接
+**1. 在一个空仓库里启动 Cube。** 只在那里跑 —— 下面这条 goal 会在启动目录下直接
 建 `notes/`,放到你自己的项目里跑就是往真实目录里乱写:
 
 ```bash
@@ -205,7 +205,7 @@ Steering Prompt 只负责定义副驾“怎么开”,不会替换不可覆盖的
 ```
 
 命名预设打包整份副驾配置 —— Steering Prompt、mission 和 steer。在 `/autopilot`
-菜单里,`e` 导出当前配置、`i` 导入,存取于 `~/.san/autopilot/<name>.json`。
+菜单里,`e` 导出当前配置、`i` 导入,存取于 `~/.cube/autopilot/<name>.json`。
 
 ## 关联
 

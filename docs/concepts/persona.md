@@ -1,11 +1,11 @@
 # Personas — switchable system prompt + skills + config
 
-A **persona** is a single on-disk folder that bundles everything that makes San
+A **persona** is a single on-disk folder that bundles everything that makes Cube
 behave a certain way — its system prompt, its skills, and its config overrides —
 so you can switch the whole bundle with one command, mid-session, without
 restarting.
 
-Personas are San's single mechanism for "who San is": they unify the system
+Personas are Cube's single mechanism for "who Cube is": they unify the system
 prompt and the active skill set behind one switch, and reduce the system prompt
 to a few replaceable parts.
 
@@ -24,7 +24,7 @@ context.
 
 A persona bundles all of it into one folder and one switch: selecting it swaps
 the system prompt, the active skill set, and the config overlay (tools /
-permissions) as a unit, reusing the hot-patch machinery San already has so the
+permissions) as a unit, reusing the hot-patch machinery Cube already has so the
 session never restarts.
 
 ---
@@ -32,7 +32,7 @@ session never restarts.
 ## 1. Concept: one folder, one persona
 
 ```
-.san/personas/ml-researcher/
+.cube/personas/ml-researcher/
 ├── system/                 ← the system prompt, split into a few replaceable parts
 │   ├── identity.md
 │   ├── behavior.md
@@ -53,7 +53,7 @@ A persona is **three orthogonal layers**, each optional:
    persona (§4).
 
 Everything is additive and fall-back-driven: a persona that only wants a different
-voice ships a single `system/identity.md`; everything else uses San's defaults.
+voice ships a single `system/identity.md`; everything else uses Cube's defaults.
 
 ---
 
@@ -134,8 +134,8 @@ Personas are scanned from two roots, project overriding user on name collision �
 mirroring how skills already resolve scope:
 
 ```
-~/.san/personas/<name>/      ← user level
-.san/personas/<name>/        ← project level (overrides user)
+~/.cube/personas/<name>/      ← user level
+.cube/personas/<name>/        ← project level (overrides user)
 ```
 
 ```
@@ -191,7 +191,7 @@ merger; the two selections apply in-memory while the persona is active.
 The load order (lowest → highest, see `internal/setting/settings.go`):
 
 ```
-~/.claude → ~/.san → .claude → .san → *.local.json → [PERSONA] → env/CLI → managed
+~/.claude → ~/.cube → .claude → .san → *.local.json → [PERSONA] → env/CLI → managed
                                                           ▲
                                           persona overlay: overrides all config files,
                                           below explicit CLI args and managed (immutable)
@@ -259,8 +259,8 @@ config change never looks like it "did nothing".
 **Discovery & load** — on startup, cwd change, or switch:
 ```
 persona.Registry.Reload(cwd)
-  ├─ scan ~/.san/personas/*/      (user)
-  └─ scan <cwd>/.san/personas/*/  (project, overrides user)
+  ├─ scan ~/.cube/personas/*/      (user)
+  └─ scan <cwd>/.cube/personas/*/  (project, overrides user)
         → per dir: parse system/*.md, skills/*/SKILL.md, settings.json
         → Registry: map[name]*Persona
 ```
@@ -302,8 +302,8 @@ plain alias of `/persona`.
 
 | # | Decision | Choice | Rationale |
 |---|---|---|---|
-| D1 | Directory & skills subdir | `~/.san/personas/` + `.san/personas/`, subdir `skills/` (no dot) | consistent with `.san/skills`; reuses the skill loader's `<scope>/skills/` scan |
-| D2 | One "who San is" mechanism | persona, not a separate identity feature | one concept, one command |
+| D1 | Directory & skills subdir | `~/.cube/personas/` + `.cube/personas/`, subdir `skills/` (no dot) | consistent with `.cube/skills`; reuses the skill loader's `<scope>/skills/` scan |
+| D2 | One "who Cube is" mechanism | persona, not a separate identity feature | one concept, one command |
 | D3 | Persona skill state | in-memory, persona-lifetime (not `skills.json`) | clean switch; no pollution of global toggles |
 | D4 | System prompt parts | 4: `identity` / `behavior` / `rules` / `environment` | first-principles who/how/what-rules/where |
 | D5 | Part override | every prose part replaceable by file; missing file → default | uniform, no special cases |

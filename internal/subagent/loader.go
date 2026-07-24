@@ -51,8 +51,8 @@ func ClearPluginAgentPaths() {
 // LoadCustomAgents loads custom agent definitions from standard locations.
 // Note: .claude/plugins/ loading is removed - plugins are handled by the plugin system.
 // Priority when the same agent name appears in several locations:
-//  1. .san/agents/*.md (project level, preferred)
-//  2. ~/.san/agents/*.md (user level, preferred)
+//  1. .cube/agents/*.md (project level, preferred)
+//  2. ~/.cube/agents/*.md (user level, preferred)
 //  3. .claude/agents/*.md (project level, Claude Code compatible)
 //  4. ~/.claude/agents/*.md (user level, Claude Code compatible)
 //  5. Plugin agent paths

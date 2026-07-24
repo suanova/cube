@@ -1,13 +1,17 @@
-# San Agent Guide
+# Cube Agent Guide
 
 This file is the short navigation map for agents and contributors. Keep durable
 knowledge in `docs/`; keep this file focused on where to look and what rules to
 follow before changing code.
 
 `AGENTS.md` is a static navigation aid for whoever opens the repository.
-`SAN.md` and `CLAUDE.md` at the project root are loaded into the running
+`CUBE.md` and `CLAUDE.md` at the project root are loaded into the running
 agent's system prompt at startup — they belong to runtime context, not to
 this file. Do not mix the two.
+
+Cube is a fork of [san](https://github.com/genai-io/san); the Go module path
+remains `github.com/genai-io/san`. The `upstream` git remote points at the
+original repo for fetching future updates.
 
 ## Start Here
 
@@ -21,7 +25,7 @@ this file. Do not mix the two.
 
 ## Repository Shape
 
-- `cmd/san`: CLI entrypoint and command wiring.
+- `cmd/cube`: CLI entrypoint and command wiring.
 - `internal/app`: Bubble Tea TUI shell, model composition, event routing.
 - `internal/core`: stable agent, message, tool, and system-prompt contracts.
 - `internal/agent`: agent construction and session-facing runtime setup.

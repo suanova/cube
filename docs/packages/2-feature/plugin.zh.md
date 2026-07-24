@@ -14,7 +14,7 @@ feature 包。
 
 ## 用途
 
-San 的"其余一切"扩展面。插件让用户一次性安装一整套 skills + agents +
+Cube 的"其余一切"扩展面。插件让用户一次性安装一整套 skills + agents +
 commands + MCP servers + hooks。本包处理安装/卸载、marketplace 查找、
 加载顺序，以及那些跨切面的回调——让 `skill`、`subagent`、`command`、
 `mcp`、`hook`、`setting` 无需直接 import `plugin` 就能看到每个已启用插件
@@ -81,7 +81,7 @@ func ResetDefaultRegistry()           // 仅测试
 
 - `Registry`（`registry.go`）——以 name 为键的 `Plugin` map，按 scope
   （user / project）保存启用状态。
-- `loader.go`——发现 `.san/plugins/`、`~/.san/plugins/`、
+- `loader.go`——发现 `.cube/plugins/`、`~/.cube/plugins/`、
   `.claude/plugins/`、`~/.claude/plugins/`。
 - `installer.go`——安装/卸载逻辑、依赖检查、版本固定（~13 KB）。
 - `marketplace.go`——registry-of-registries 查找（去哪里找插件来源）。
@@ -105,7 +105,7 @@ marketplace 是一个目录册。它的 `marketplace.json` *声明*插件；每�
 ```mermaid
 flowchart TD
     A["/plugin → Marketplaces → 添加"] --> B["AddGitHub / AddDirectory<br/>把来源记入 known_marketplaces.json"]
-    B --> C["Sync：git clone --depth 1<br/>→ ~/.san/plugins/marketplaces/&lt;id&gt;"]
+    B --> C["Sync：git clone --depth 1<br/>→ ~/.cube/plugins/marketplaces/&lt;id&gt;"]
     C --> D{"marketplace.json<br/>有 plugins[] 吗？"}
     D -- "有" --> E["MarketplacePlugins：<br/>清单声明的插件"]
     D -- "无" --> F["扫描内置子目录<br/>（回退）"]
@@ -133,8 +133,8 @@ flowchart TD
 | `git-subdir` | `{"source":"git-subdir","url":"…","path":"sub/dir"}` | 该仓库的一个子目录 |
 | `npm` | `{"source":"npm","package":"@scope/p"}` | npm（可解析；暂不支持安装） |
 
-**scope → 安装目录：** user → `~/.san/plugins/cache/`，project →
-`.san/plugins/`，local → `.san/plugins-local/`。启用状态保存在对应 scope
+**scope → 安装目录：** user → `~/.cube/plugins/cache/`，project →
+`.cube/plugins/`，local → `.cube/plugins-local/`。启用状态保存在对应 scope
 的 `settings.json` 的 `enabledPlugins` 字段下。
 
 ## 测试

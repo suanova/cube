@@ -69,7 +69,7 @@ on `*model`, never reaching down into root from a sub-model. Source 2
 
 - **`services` snapshots 16 singletons via `Default()` at construction.**
   The whole codebase's singleton problem manifests here. The right shape
-  is for `cmd/san` to construct each service explicitly and pass it in,
+  is for `cmd/cube` to construct each service explicitly and pass it in,
   inverting the current pull-from-`Default()` model.
 - **Two `Default()` shapes coexist:** most services panic if not
   initialized; `Hook` uses `DefaultIfInit()` (nil-tolerant). Two contracts
@@ -125,7 +125,7 @@ Sub-model packages:
 
 ## Lifecycle
 
-- `cmd/san` calls `app.Run()` which builds the `tea.Program`,
+- `cmd/cube` calls `app.Run()` which builds the `tea.Program`,
   `newServices()` snapshots all `Default()` references, the root model is
   constructed, and `tea.Program.Run()` enters the MVU loop.
 - Per turn: user submits → input subpackage → `sendToAgent()` → agent

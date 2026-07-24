@@ -1,9 +1,9 @@
-# san installer for Windows (PowerShell 5.1+)
+# cube installer for Windows (PowerShell 5.1+)
 #
-#   irm https://raw.githubusercontent.com/genai-io/san/main/install.ps1 | iex
+#   irm https://raw.githubusercontent.com/suanova/cube/main/install.ps1 | iex
 #
 # Pass a command (install is the default):
-#   & ([scriptblock]::Create((irm https://raw.githubusercontent.com/genai-io/san/main/install.ps1))) uninstall
+#   & ([scriptblock]::Create((irm https://raw.githubusercontent.com/suanova/cube/main/install.ps1))) uninstall
 
 param(
     [ValidateSet('install', 'upgrade', 'uninstall', 'help')]
@@ -12,9 +12,9 @@ param(
 
 $ErrorActionPreference = 'Stop'
 
-$Repo = 'genai-io/san'
-$Binary = 'san'
-$InstallDir = Join-Path $env:LOCALAPPDATA 'san\bin'
+$Repo = 'suanova/cube'
+$Binary = 'cube'
+$InstallDir = Join-Path $env:LOCALAPPDATA 'cube\bin'
 $ExePath = Join-Path $InstallDir "$Binary.exe"
 
 function Info($msg) { Write-Host $msg -ForegroundColor Green }
@@ -25,9 +25,9 @@ function Get-Usage {
     Write-Host "Usage: install.ps1 [install|upgrade|uninstall]"
     Write-Host ""
     Write-Host "Commands:"
-    Write-Host "  install    Install san (default)"
+    Write-Host "  install    Install cube (default)"
     Write-Host "  upgrade    Upgrade to latest version"
-    Write-Host "  uninstall  Remove san and config"
+    Write-Host "  uninstall  Remove cube and config"
 }
 
 # Detect architecture. PROCESSOR_ARCHITEW6432 is set when a 32-bit
@@ -97,19 +97,19 @@ function Invoke-Install {
     $current = Get-InstalledVersion
     if ($current) {
         if ($current -eq $version) {
-            Info "[OK] san v$version is already installed"
+            Info "[OK] cube v$version is already installed"
             return
         }
-        Info "Upgrading san from v$current to v$version..."
+        Info "Upgrading cube from v$current to v$version..."
     } else {
-        Info "Installing san v$version for windows/$arch..."
+        Info "Installing cube v$version for windows/$arch..."
     }
 
     $url = Get-DownloadUrl $version $arch
-    $tmp = Join-Path ([System.IO.Path]::GetTempPath()) ("san-" + [System.Guid]::NewGuid().ToString())
+    $tmp = Join-Path ([System.IO.Path]::GetTempPath()) ("cube-" + [System.Guid]::NewGuid().ToString())
     New-Item -ItemType Directory -Path $tmp -Force | Out-Null
     try {
-        $zip = Join-Path $tmp 'san.zip'
+        $zip = Join-Path $tmp 'cube.zip'
         Invoke-WebRequest -Uri $url -OutFile $zip -UseBasicParsing
         Expand-Archive -Path $zip -DestinationPath $tmp -Force
 
@@ -120,14 +120,14 @@ function Invoke-Install {
         Move-Item -Path $src -Destination $ExePath -Force
 
         Add-ToUserPath $InstallDir
-        Info "[OK] san v$version installed to $ExePath"
+        Info "[OK] cube v$version installed to $ExePath"
     } finally {
         Remove-Item -Path $tmp -Recurse -Force -ErrorAction SilentlyContinue
     }
 }
 
 function Invoke-Uninstall {
-    Info "Uninstalling san..."
+    Info "Uninstalling cube..."
     if (Test-Path $ExePath) {
         $response = Read-Host "Remove binary '$ExePath'? [y/N]"
         if ($response -match '^[Yy]$') {
@@ -140,12 +140,15 @@ function Invoke-Uninstall {
         Warn "Binary not found at $ExePath"
     }
 
-    $cfg = Join-Path $env:USERPROFILE '.san'
-    if (Test-Path $cfg) {
-        $response = Read-Host "Remove config directory $cfg? [y/N]"
-        if ($response -match '^[Yy]$') {
-            Remove-Item -Path $cfg -Recurse -Force
-            Info "[OK] Removed $cfg"
+    # Remove the config directory (~/.cube, and the legacy ~/.san from before the fork)
+    foreach ($name in @('.cube', '.san')) {
+        $cfg = Join-Path $env:USERPROFILE $name
+        if (Test-Path $cfg) {
+            $response = Read-Host "Remove config directory $cfg? [y/N]"
+            if ($response -match '^[Yy]$') {
+                Remove-Item -Path $cfg -Recurse -Force
+                Info "[OK] Removed $cfg"
+            }
         }
     }
     Info "[OK] Uninstall complete"

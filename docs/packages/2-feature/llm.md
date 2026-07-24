@@ -58,7 +58,7 @@ func ResetDefaultConn()       // test-only
   `core.LLM`, tracks per-call token counts, streams `core.Chunk`, applies
   retry/cost logic via `logging.go` and `money.go`.
 - `Store` (`store.go`) — persists user's provider connections under
-  `~/.san/providers.json`; tracks current model and caches provider-scoped
+  `~/.cube/providers.json`; tracks current model and caches provider-scoped
   model metadata. `ModelInfo.Reasoning` carries live supported/default effort
   values when a provider advertises them; application resolution prefers that
   metadata and falls back to `ThinkingEffortProvider` for catalogs (such as the
@@ -69,7 +69,7 @@ func ResetDefaultConn()       // test-only
 
 ## Lifecycle
 
-- Construction: `Initialize(Options{})` loads `~/.san/providers.json`,
+- Construction: `Initialize(Options{})` loads `~/.cube/providers.json`,
   picks the last-used provider (or the first connectable one), and stores
   it.
 - Switching: `/model` slash command calls `SetCurrentModel` + reload.

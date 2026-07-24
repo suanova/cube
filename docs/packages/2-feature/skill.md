@@ -17,8 +17,8 @@ made aware of (`active`), made invocable via slash command (`enabled`), or
 hidden (`disabled`). This package:
 
 1. Discovers skills across six scopes
-   (`~/.claude/skills/`, `~/.san/plugins/*/skills/`, `~/.san/skills/`,
-   `.claude/skills/`, `.san/plugins/*/skills/`, `.san/skills/`) with
+   (`~/.claude/skills/`, `~/.cube/plugins/*/skills/`, `~/.cube/skills/`,
+   `.claude/skills/`, `.cube/plugins/*/skills/`, `.cube/skills/`) with
    project overriding user overriding Claude-compat.
 2. Persists per-skill state in user / project state stores.
 3. Renders the active-skills block consumed by the `skills-directory`

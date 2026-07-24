@@ -5,7 +5,7 @@ layer: feature
 
 # selflearn
 
-Runs San's background self-learning pass: after a turn, a restricted fork
+Runs Cube's background self-learning pass: after a turn, a restricted fork
 reviews the just-completed conversation and writes durable memory or
 agent-created skills. Triggering is model-decided — the main agent calls the
 `Evolve` tool when a turn is worth learning from.
@@ -17,7 +17,7 @@ restricted skill-management surface for the L1 background review loop. The app
 wires it per session after resolving settings; the package itself stays outside
 the Bubble Tea model and exposes concrete types for the pieces the app needs.
 
-This package deliberately writes only to San-managed durable state: project
+This package deliberately writes only to Cube-managed durable state: project
 memory under the encoded project configuration directory and skills marked with
 agent-created provenance. User-created skills are read-only to the reviewer at
 every setting.
@@ -49,7 +49,7 @@ future sessions, not the current turn; at most one review runs at a time.
 Capability changes are reconciled at the next turn start: `ensureAgentSession`
 records what the toolset was built with (`agentEvolveCaps`) and rebuilds the
 agent on drift — covering /evolve saves and external settings edits with one
-mechanism. `SAN_DISABLE_SELF_LEARN=1` is a hard runtime switch: it suppresses
+mechanism. `CUBE_DISABLE_SELF_LEARN=1` is a hard runtime switch: it suppresses
 both the reviewer and the `Evolve` tool regardless of layered settings.
 
 The skills JSON retains an explicit `enabled` compatibility marker. Legacy
@@ -154,7 +154,7 @@ func (m *SkillManager) Delete(name, note string) (string, error)
 - `MemoryStore` writes delimited markdown entries under
   `system.AutoMemoryDir(cwd)`, with traversal checks, prompt-injection scans,
   and per-file size caps.
-- `SkillManager` reads and writes San skill directories directly so the review
+- `SkillManager` reads and writes Cube skill directories directly so the review
   sees its own mid-session writes without relying on the startup skill
   registry cache.
 - Write observers are used by `internal/app` to update the live self-learning
@@ -203,10 +203,10 @@ internal/app/selflearn_review_fixes_test.go — runtime gates, layered overrides
    "testing the trigger").
 4. Watch: the status-bar indicator (`evolving… → evolved` / `nothing`), the
    `/evolve → Learned skills` inventory + RECENT recap, and
-   `~/.san/debug.log` (`grep selflearn`).
+   `~/.cube/debug.log` (`grep selflearn`).
 
 Requires an active LLM provider (the fork makes a real call) and
-`SAN_DISABLE_SELF_LEARN` unset.
+`CUBE_DISABLE_SELF_LEARN` unset.
 
 ## See Also
 

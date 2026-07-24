@@ -1,11 +1,11 @@
 // Package config provides multi-level settings management for San.
 // Data are loaded from multiple sources with the following priority (lowest to highest):
 //  1. ~/.claude/settings.json (Claude user level - compatibility)
-//  2. ~/.san/settings.json (San user level)
+//  2. ~/.cube/settings.json (Cube user level)
 //  3. .claude/settings.json (Claude project level - compatibility)
-//  4. .san/settings.json (San project level)
+//  4. .cube/settings.json (Cube project level)
 //  5. .claude/settings.local.json (Claude local level - compatibility)
-//  6. .san/settings.local.json (San local level)
+//  6. .cube/settings.local.json (San local level)
 //  7. Environment variables / CLI arguments
 //  8. managed-settings.json (system level - cannot be overridden)
 package setting
@@ -54,8 +54,8 @@ type Data struct {
 	// "unset"; nil (unset) means off — the bar is opt-in. The numeric
 	// "ctx X/Y" label is unaffected and always shows.
 	ContextBar *bool `json:"contextBar,omitempty"`
-	// Persona selects an active persona directory under ~/.san/personas/<name>/
-	// or .san/personas/<name>/. Empty = no persona override. The persona's own
+	// Persona selects an active persona directory under ~/.cube/personas/<name>/
+	// or .cube/personas/<name>/. Empty = no persona override. The persona's own
 	// settings.json is applied as the highest config overlay (see
 	// ApplyPersonaOverlay).
 	Persona string `json:"persona,omitempty"`
@@ -687,7 +687,7 @@ func InitForApp(cwd string) *Data {
 
 // mergeProviderPreferences reads external provider config files and merges
 // relevant preferences into Data. Currently reads searchProvider from
-// ~/.san/providers.json (owned by the llm package) so that search config
+// ~/.cube/providers.json (owned by the llm package) so that search config
 // is accessible via the unified Data struct.
 func mergeProviderPreferences(s *Data) {
 	if s.SearchProvider != "" {
