@@ -397,7 +397,7 @@ func TestInstaller_InstallAndUninstall_FromMarketplaceDirectory(t *testing.T) {
 		t.Fatalf("Install() error: %v", err)
 	}
 
-	installPath := filepath.Join(cwd, ".san", "plugins", "deploy")
+	installPath := filepath.Join(cwd, ".cube", "plugins", "deploy")
 	if _, err := os.Stat(installPath); err != nil {
 		t.Fatalf("expected installed plugin dir: %v", err)
 	}
@@ -472,7 +472,7 @@ func TestInstall_LoadsMarketplacesAndInstalls(t *testing.T) {
 		t.Fatalf("Install() error: %v", err)
 	}
 
-	installPath := filepath.Join(cwd, ".san", "plugins", "deploy")
+	installPath := filepath.Join(cwd, ".cube", "plugins", "deploy")
 	if _, err := os.Stat(installPath); err != nil {
 		t.Fatalf("expected installed plugin dir: %v", err)
 	}

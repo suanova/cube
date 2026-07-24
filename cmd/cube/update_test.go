@@ -37,7 +37,7 @@ func TestFetchLatestRelease(t *testing.T) {
 		if r.Method != http.MethodHead {
 			t.Errorf("unexpected method: %s", r.Method)
 		}
-		w.Header().Set("Location", "https://github.com/genai-io/san/releases/tag/v1.21.0")
+		w.Header().Set("Location", "https://github.com/suanova/cube/releases/tag/v1.0.0")
 		w.WriteHeader(http.StatusFound)
 	}))
 	defer srv.Close()
@@ -50,8 +50,8 @@ func TestFetchLatestRelease(t *testing.T) {
 	if err != nil {
 		t.Fatalf("fetchLatestRelease() error: %v", err)
 	}
-	if release.TagName != "v1.21.0" {
-		t.Errorf("TagName = %q, want %q", release.TagName, "v1.21.0")
+	if release.TagName != "v1.0.0" {
+		t.Errorf("TagName = %q, want %q", release.TagName, "v1.0.0")
 	}
 }
 
