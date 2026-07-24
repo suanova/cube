@@ -14,11 +14,11 @@ Alternatives:
 
 ```bash
 # via Go toolchain
-go install github.com/genai-io/san/cmd/san@latest
+go install github.com/genai-io/san/cmd/cube@latest
 
 # from source
 git clone https://github.com/genai-io/san.git
-cd san && go build -o san ./cmd/san
+cd san && go build -o san ./cmd/cube
 ```
 
 The binary is a single ~12 MB Go executable; no Node, no runtime.
@@ -29,7 +29,7 @@ The binary is a single ~12 MB Go executable; no Node, no runtime.
 san
 ```
 
-On first launch, San drops into the TUI. Type `/model` to connect a
+On first launch, Cube drops into the TUI. Type `/model` to connect a
 provider — you will be asked for an API key (or routed through Vertex AI
 for Anthropic). Supported providers and the env var each one reads:
 
@@ -48,7 +48,7 @@ for Anthropic). Supported providers and the env var each one reads:
 | SenseNova | `SENSENOVA_API_KEY` |
 | Agnes-AI | `AGNESAI_API_KEY` |
 
-You can also set them in `.env` or `~/.san/providers.json`.
+You can also set them in `.env` or `~/.cube/providers.json`.
 
 ## First Turn
 
@@ -58,7 +58,7 @@ Type a prompt and press `Enter`:
 > explain what this repo does
 ```
 
-San reads your project, plans, and acts. Tool calls (file reads,
+Cube reads your project, plans, and acts. Tool calls (file reads,
 edits, bash) trigger a permission prompt by default — press `Y` to
 approve once, `A` to approve-all for this session.
 
@@ -76,26 +76,26 @@ approve once, `A` to approve-all for this session.
 | List all slash commands | `/help` |
 | Switch model | `/model` |
 | Switch persona | `/persona` |
-| Save / resume session | `san --continue`, `san --resume` |
+| Save / resume session | `cube --continue`, `cube --resume` |
 
 ## One-Shot and Piped Modes
 
 ```bash
-san "explain this function"          # one-shot, prints answer and exits
+cube "explain this function"          # one-shot, prints answer and exits
 cat main.go | san "review"           # piped input
-san --continue                       # resume the last session
+cube --continue                       # resume the last session
 ```
 
 ## Where Configuration Lives
 
 | Scope | Path | What it holds |
 |---|---|---|
-| User | `~/.san/providers.json` | Provider connections, current model |
-| User | `~/.san/settings.json` | Permissions, hooks, env, persona, search provider |
-| User | `~/.san/skills/` `~/.san/agents/` `~/.san/commands/` `~/.san/plugins/` | Your personal extensions |
-| Project | `<project>/.san/settings.json` | Per-project overrides |
-| Project | `<project>/.san/{skills,agents,commands}/` | Project-scoped extensions |
-| Project | `<project>/SAN.md` or `CLAUDE.md` | Auto-loaded into the system prompt |
+| User | `~/.cube/providers.json` | Provider connections, current model |
+| User | `~/.cube/settings.json` | Permissions, hooks, env, persona, search provider |
+| User | `~/.cube/skills/` `~/.cube/agents/` `~/.cube/commands/` `~/.cube/plugins/` | Your personal extensions |
+| Project | `<project>/.cube/settings.json` | Per-project overrides |
+| Project | `<project>/.cube/{skills,agents,commands}/` | Project-scoped extensions |
+| Project | `<project>/CUBE.md` or `CLAUDE.md` | Auto-loaded into the system prompt |
 
 See [`reference/configuration.md`](../reference/configuration.md) for the
 full schema.

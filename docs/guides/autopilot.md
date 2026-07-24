@@ -2,7 +2,7 @@
 
 ## Overview
 
-Autopilot is San's autonomy system, designed to minimize human intervention: a
+Autopilot is Cube's autonomy system, designed to minimize human intervention: a
 copilot model cruises the session, keeping routine work moving and handing
 control back only when something genuinely needs you. It acts through a set of
 independently enabled **steers** — proposing the next step, approving gray-zone
@@ -12,7 +12,7 @@ gray-zone permission judging is on by default.
 
 Enter Autopilot mode with `shift+tab` (cycle until the amber
 `⏵⏵ autopilot on`), and configure it with the `/autopilot` panel. A resumed
-session (`san -r <id>`) comes back in the mode it was saved in. If you just want
+session (`cube -r <id>`) comes back in the mode it was saved in. If you just want
 to see it drive, [`/goal`](#goal) is the shortest path in — it is one preset of
 everything below.
 
@@ -123,7 +123,7 @@ A two-minute run that exercises the full loop — kick-off, gray-zone approval,
 auto-continuation, and completion — without touching anything outside a scratch
 directory.
 
-**1. Start San in an empty repository.** Run it there and nowhere else — the
+**1. Start Cube in an empty repository.** Run it there and nowhere else — the
 goal below writes `notes/` wherever it starts, so in one of your own projects it
 would scribble into a real directory:
 
@@ -234,7 +234,7 @@ steering-instructions portion.
 
 Named presets bundle the whole copilot config — Steering Prompt, mission, and
 steers. In the `/autopilot` menu, `e` exports the current config and `i` imports
-one, stored under `~/.san/autopilot/<name>.json`.
+one, stored under `~/.cube/autopilot/<name>.json`.
 
 ## Relationship to other features
 

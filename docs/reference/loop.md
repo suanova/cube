@@ -61,7 +61,7 @@ Current scope:
 | Mode | Support |
 |------|---------|
 | Interactive TUI | Supported |
-| Non-interactive `san "..."` | `/loop` slash-command workflow is not supported |
+| Non-interactive `cube "..."` | `/loop` slash-command workflow is not supported |
 
 ## Related Features
 
@@ -180,7 +180,7 @@ tmux kill-session -t t_loop
 
 ```bash
 # /loop is not a supported non-interactive slash-command interface
-san "/loop 5m check the deploy"
+cube "/loop 5m check the deploy"
 
 # Expected:
 # - no documented guarantee that slash commands run in non-interactive mode

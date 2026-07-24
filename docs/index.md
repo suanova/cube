@@ -1,6 +1,6 @@
 # Documentation Index
 
-This directory is the durable knowledge base for San. Keep `README.md`
+This directory is the durable knowledge base for Cube. Keep `README.md`
 concise, use `AGENTS.md` as the short navigation map, and put lasting
 explanations here.
 

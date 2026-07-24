@@ -13,8 +13,8 @@
 //	  settings.json   (optional) description + skill states + agent allow-list + config overlay
 //
 // Personas live under:
-//   - ~/.san/personas/<name>/   (user level)
-//   - .san/personas/<name>/     (project level — overrides user)
+//   - ~/.cube/personas/<name>/   (user level)
+//   - .cube/personas/<name>/     (project level — overrides user)
 //
 // The "default" persona is virtual: it represents San's built-in prompt with
 // no skills and no overlay, and has no directory.
@@ -40,8 +40,8 @@ type Scope int
 
 const (
 	ScopeBuiltin Scope = iota // virtual default persona
-	ScopeUser                 // ~/.san/personas/
-	ScopeProject              // .san/personas/  (overrides user)
+	ScopeUser                 // ~/.cube/personas/
+	ScopeProject              // .cube/personas/  (overrides user)
 )
 
 // Persona is one persona bundle parsed from disk.

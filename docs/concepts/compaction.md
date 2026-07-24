@@ -1,6 +1,6 @@
 # Compaction
 
-When a conversation approaches the model's input limit, San **compacts**
+When a conversation approaches the model's input limit, Cube **compacts**
 it: an LLM summarizes the history, and that summary replaces the old turns so
 the conversation can keep going within the window.
 
@@ -9,13 +9,13 @@ This page covers the mechanism end to end — what happens to each
 blocks, messages), how the summary is recorded for replay, and how the two
 entry points (automatic and manual `/compact`) differ and agree.
 
-The window itself is resolved as: `SAN_INPUT_LIMIT` if set, else the limit the
+The window itself is resolved as: `CUBE_INPUT_LIMIT` if set, else the limit the
 model reports (or the one configured for it), else unknown. There is no guessed
 default — an invented window is acted on silently, and guessing low discards
 context on every compaction while guessing high never fires. An unknown window
 skips proactive compaction and leaves the reactive *prompt-too-long* retry to
 recover; the status bar shows `--` rather than a percentage of a guess. Set
-`SAN_INPUT_LIMIT` for a model San cannot size on its own.
+`CUBE_INPUT_LIMIT` for a model Cube cannot size on its own.
 
 ## What compaction touches (and what it doesn't)
 
@@ -166,7 +166,7 @@ reconstructed chain matches what the live agent actually sent.
 Reminder providers render from cached instructions
 (`env.CachedUserInstructions` / `CachedProjectInstructions`). On PostCompact the
 harness calls `refreshMemoryContext` to **re-read the memory files from disk
-before** re-emitting, so a `SAN.md`/`CLAUDE.md` edited mid-session re-injects
+before** re-emitting, so a `CUBE.md`/`CLAUDE.md` edited mid-session re-injects
 its *latest* content rather than a stale cached copy. This is the key asymmetry
 with the system prompt: the prompt is reused from cache (it cannot have
 changed), but reminders are deliberately rebuilt.

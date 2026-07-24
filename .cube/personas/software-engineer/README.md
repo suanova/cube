@@ -1,6 +1,6 @@
 # software-engineer (project-scoped persona)
 
-A disciplined senior-engineer persona used while developing San: think before
+A disciplined senior-engineer persona used while developing Cube: think before
 coding, ask instead of assuming, write the minimum that solves the problem,
 change only what the task requires.
 
@@ -8,11 +8,11 @@ change only what the task requires.
 directory `software-engineer/`. This is a synced copy — edit it there and copy
 the change back, so the two do not drift. Licensing/attribution is in `NOTICE`.
 
-**Activate** while working on San:
+**Activate** while working on Cube:
 
 ```
 /persona software-engineer
 ```
 
-It is available but not forced on: San's built-in default stays active until you
+It is available but not forced on: Cube's built-in default stays active until you
 switch.

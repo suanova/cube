@@ -1,7 +1,7 @@
 ---
 name: qa
 description: >-
-  Regression test a San feature by name. Looks for a feature doc in docs/reference/ or
+  Regression test a Cube feature by name. Looks for a feature doc in docs/reference/ or
   docs/packages/2-feature/, runs automated Go tests and interactive tmux tests, then
   produces a pass/fail report.
   Use this skill when the user says "qa", "regression test", "test feature X", "verify feature",
@@ -17,7 +17,7 @@ argument-hint: "<feature> [--interactive] [--pane]"
 
 # QA — Feature Regression Testing
 
-Run automated and interactive regression tests for a San feature by name.
+Run automated and interactive regression tests for a Cube feature by name.
 
 ## Arguments
 
@@ -128,8 +128,8 @@ Use **PASS**, **FAIL**, or **SKIP** for each item. Include failure details inlin
 
 ## Important notes
 
-- The binary path is `./bin/san` (built by `make build`), not the installed `san`.
+- The binary path is `./bin/cube` (built by `make build`), not the installed `cube`.
 - Interactive tests that require an LLM response need a configured provider. If no provider is set, mark those steps as SKIP with a note.
-- For interactive tests, use `Ctrl+C` (`C-c`) to exit `san`, not `q` (which gets interpreted as user input).
+- For interactive tests, use `Ctrl+C` (`C-c`) to exit `cube`, not `q` (which gets interpreted as user input).
 - Always clean up temp files and tmux sessions/panes after testing, even on failure.
 - If a test step times out (no expected output after the sleep), mark it FAIL and move on — don't hang.

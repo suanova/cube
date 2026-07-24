@@ -37,7 +37,7 @@ func TestFetchLatestRelease(t *testing.T) {
 		if r.Method != http.MethodHead {
 			t.Errorf("unexpected method: %s", r.Method)
 		}
-		w.Header().Set("Location", "https://github.com/genai-io/san/releases/tag/v1.21.0")
+		w.Header().Set("Location", "https://github.com/suanova/cube/releases/tag/v1.0.0")
 		w.WriteHeader(http.StatusFound)
 	}))
 	defer srv.Close()
@@ -50,8 +50,8 @@ func TestFetchLatestRelease(t *testing.T) {
 	if err != nil {
 		t.Fatalf("fetchLatestRelease() error: %v", err)
 	}
-	if release.TagName != "v1.21.0" {
-		t.Errorf("TagName = %q, want %q", release.TagName, "v1.21.0")
+	if release.TagName != "v1.0.0" {
+		t.Errorf("TagName = %q, want %q", release.TagName, "v1.0.0")
 	}
 }
 
@@ -131,14 +131,14 @@ func TestDownloadWithProgress_HTTPError(t *testing.T) {
 func TestExtractTarGz(t *testing.T) {
 	dir := t.TempDir()
 
-	// Build a tar.gz in memory containing a single "san" file
+	// Build a tar.gz in memory containing a single "cube" file
 	var buf bytes.Buffer
 	gzw := gzip.NewWriter(&buf)
 	tw := tar.NewWriter(gzw)
 
 	content := []byte("#!/bin/bash\necho hello")
 	hdr := &tar.Header{
-		Name: "san",
+		Name: "cube",
 		Mode: 0755,
 		Size: int64(len(content)),
 	}
@@ -163,7 +163,7 @@ func TestExtractTarGz(t *testing.T) {
 		t.Fatalf("extractTarGz() error: %v", err)
 	}
 
-	extracted := filepath.Join(destDir, "san")
+	extracted := filepath.Join(destDir, "cube")
 	data, err := os.ReadFile(extracted)
 	if err != nil {
 		t.Fatal(err)

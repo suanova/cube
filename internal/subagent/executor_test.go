@@ -18,7 +18,7 @@ import (
 
 // llm.ParseVendorModel gates "vendor/model" routing on registered providers, so
 // the tests that exercise routing register the vendors they reference. (The app
-// wires these via blank imports in cmd/san/main.go.)
+// wires these via blank imports in cmd/cube/main.go.)
 func init() {
 	llm.RegisterProviderDisplay(llm.DeepSeek, llm.ProviderDisplay{Name: "DeepSeek"})
 	llm.RegisterProviderDisplay(llm.Anthropic, llm.ProviderDisplay{Name: "Anthropic"})

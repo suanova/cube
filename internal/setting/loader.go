@@ -73,11 +73,11 @@ func NewLoaderForCwd(cwd string) *Loader {
 
 // Load loads and merges settings from all sources in priority order (lowest to highest):
 //  1. ~/.claude/settings.json
-//  2. ~/.san/settings.json
+//  2. ~/.cube/settings.json
 //  3. .claude/settings.json
-//  4. .san/settings.json
+//  4. .cube/settings.json
 //  5. .claude/settings.local.json
-//  6. .san/settings.local.json
+//  6. .cube/settings.local.json
 func (l *Loader) Load() (*Data, error) {
 	homeDir, _ := os.UserHomeDir()
 
@@ -132,7 +132,7 @@ func (l *Loader) Load() (*Data, error) {
 
 		// Accumulate hooks by source type.
 		// Native hooks: higher-priority sources replace lower-priority per event.
-		// This means project .san/settings.json can set "PermissionRequest": []
+		// This means project .cube/settings.json can set "PermissionRequest": []
 		// to disable user-level PermissionRequest hooks.
 		for event, hooks := range srcHooks {
 			if src.claudeCompat {
@@ -441,7 +441,7 @@ func GetDisabledTools() map[string]bool {
 }
 
 // GetDisabledToolsAt returns disabled tools from a single settings file (not merged).
-// userLevel=true reads from ~/.san/settings.json; false reads from .san/settings.json.
+// userLevel=true reads from ~/.cube/settings.json; false reads from .cube/settings.json.
 func GetDisabledToolsAt(userLevel bool) map[string]bool {
 	loader := NewLoader()
 	path := filepath.Join(loader.projectDir, "settings.json")
@@ -458,7 +458,7 @@ func GetDisabledToolsAt(userLevel bool) map[string]bool {
 }
 
 // PersonaAt returns the persona pinned in a single settings file (not merged).
-// userLevel=true reads ~/.san/settings.json; false reads <cwd>/.san/settings.json.
+// userLevel=true reads ~/.cube/settings.json; false reads <cwd>/.san/settings.json.
 func PersonaAt(cwd string, userLevel bool) string {
 	loader := NewLoader()
 	if cwd != "" {
@@ -526,7 +526,7 @@ func LoadTheme() string {
 	return s.Theme
 }
 
-// SaveTheme persists the chosen theme to ~/.san/settings.json.
+// SaveTheme persists the chosen theme to ~/.cube/settings.json.
 func SaveTheme(t string) error {
 	if err := NewLoader().SaveToUser(&Data{Theme: t}); err != nil {
 		return err
@@ -538,7 +538,7 @@ func SaveTheme(t string) error {
 }
 
 // SaveContextBar persists the context-usage bar on/off choice to
-// ~/.san/settings.json. The value is written as an explicit pointer so an
+// ~/.cube/settings.json. The value is written as an explicit pointer so an
 // "off" choice overrides any inherited "on" instead of being dropped as a
 // zero value (see Data.ContextBar).
 func SaveContextBar(on bool) error {
@@ -553,7 +553,7 @@ func SaveContextBar(on bool) error {
 
 // SavePersonaAt persists the chosen persona name at the given scope: the
 // project file (.san/settings.json under cwd) when userLevel is false, or the
-// user file (~/.san/settings.json) when true. An empty name clears the field.
+// user file (~/.cube/settings.json) when true. An empty name clears the field.
 // It bypasses mergeSettings so an empty value can actually clear it on disk.
 //
 // Scope matters: a project-scoped persona should save project-level so the

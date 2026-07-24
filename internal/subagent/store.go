@@ -33,7 +33,7 @@ func NewAgentStore(path string) *AgentStore {
 	return store
 }
 
-// NewUserAgentStore creates a store for user-level (~/.san/agents.json)
+// NewUserAgentStore creates a store for user-level (~/.cube/agents.json)
 func NewUserAgentStore() *AgentStore {
 	home, err := os.UserHomeDir()
 	if err != nil {

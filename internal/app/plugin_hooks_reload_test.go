@@ -46,7 +46,7 @@ func TestSettingsSnapshotIsIndependentPerCall(t *testing.T) {
 }
 
 // settingsWithNoHooks is the zero value deliberately: it isolates the test from
-// whatever hooks the developer's own ~/.san and .san define, so the only hook
+// whatever hooks the developer's own ~/.cube and .cube define, so the only hook
 // the engine can see is the plugin's.
 func settingsWithNoHooks(t *testing.T) *setting.Settings {
 	t.Helper()

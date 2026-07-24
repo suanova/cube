@@ -1,15 +1,15 @@
-# Contributing to San
+# Contributing to Cube
 
 Thanks for your interest in contributing! This guide will help you get started.
 
 ## Quick Start
 
 ```bash
-git clone https://github.com/genai-io/san.git
-cd san
+git clone https://github.com/suanova/cube.git
+cd cube
 git config core.hooksPath .githooks
-go build -o san ./cmd/san
-./san
+go build -o cube ./cmd/cube
+./cube
 ```
 
 ## Development
@@ -32,7 +32,7 @@ changes are skipped — format those manually with `make format`.
 ### Project Structure
 
 ```
-cmd/               # Binary entrypoints (cmd/san)
+cmd/               # Binary entrypoints (cmd/cube)
 docs/              # Documentation (architecture.md + packages/ + concepts/ + reference/ + guides/ + operations/)
 internal/          # All Go code; see docs/reference/package-map.md for the full table
 tools/             # Developer tooling (layercheck, …)
@@ -50,13 +50,13 @@ following [`docs/packages/TEMPLATE.md`](docs/packages/TEMPLATE.md).
 ### Run Tests
 
 ```bash
-GOCACHE=/private/tmp/san-go-build-cache go test ./...
+GOCACHE=/private/tmp/cube-go-build-cache go test ./...
 ```
 
 Transcript/session focused suites:
 
 ```bash
-GOCACHE=/private/tmp/san-go-build-cache go test \
+GOCACHE=/private/tmp/cube-go-build-cache go test \
   ./internal/session/... ./tests/integration/session/... ./tests/integration/cli/...
 ```
 
@@ -71,23 +71,23 @@ documented in [`docs/packages/session.md`](docs/packages/session.md).
 ### Debug Mode
 
 ```bash
-SAN_DEBUG=1 ./san
-# Logs written to ~/.san/debug.log
+CUBE_DEBUG=1 ./cube
+# Logs written to ~/.cube/debug.log
 ```
 
 ## How to Contribute
 
 ### Report Bugs
 
-Use the [Bug report](https://github.com/genai-io/san/issues/new?template=bug_report.yml)
+Use the [Bug report](https://github.com/suanova/cube/issues/new?template=bug_report.yml)
 template. For security vulnerabilities, follow [SECURITY.md](SECURITY.md) instead —
 do not open a public issue.
 
 ### Suggest Features
 
-Use the [Feature request](https://github.com/genai-io/san/issues/new?template=feature_request.yml)
+Use the [Feature request](https://github.com/suanova/cube/issues/new?template=feature_request.yml)
 template. For open-ended ideas, start a
-[discussion](https://github.com/genai-io/san/discussions) first.
+[discussion](https://github.com/suanova/cube/discussions) first.
 
 ### Submit Code
 
@@ -123,7 +123,7 @@ chore: maintenance tasks
 
 ## Project Roles
 
-San uses a contributor ladder — Contributor → Reviewer → Approver →
+Cube uses a contributor ladder — Contributor → Reviewer → Approver →
 Maintainer — backed by the [`OWNERS`](OWNERS) file. See
 [CONTRIBUTOR_LADDER.md](CONTRIBUTOR_LADDER.md) for what each role does and
 how contributors advance between them.
@@ -140,4 +140,4 @@ See our [security policy](SECURITY.md) for private reporting instructions.
 
 ## Questions?
 
-Start a [discussion](https://github.com/genai-io/san/discussions). We're happy to help!
+Start a [discussion](https://github.com/suanova/cube/discussions). We're happy to help!

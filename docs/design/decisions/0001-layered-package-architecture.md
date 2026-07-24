@@ -109,7 +109,7 @@ A separate PR-3 addresses:
   consumer-defined interfaces per package.
 - Dropping `Engine()` / `Registry()` / `GetStore()` escape hatches.
 - Moving construction from per-package `Default()` singletons into the
-  `cmd/san` composition root.
+  `cmd/cube` composition root.
 
 Full road map in `notes/tech-debt.md`.
 

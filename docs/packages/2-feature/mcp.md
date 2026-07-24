@@ -11,14 +11,14 @@ invoke them. Transport implementations live in `internal/mcp/transport/`.
 
 ## Purpose
 
-MCP is how San talks to **external** tool providers (file system
+MCP is how Cube talks to **external** tool providers (file system
 servers, GitHub servers, custom user servers, …). Each configured MCP
 server is a separate subprocess (`stdio`) or HTTP endpoint that publishes
 a list of tools; this package maintains the connection, surfaces those
 tools as `core.ToolSchema` to the agent loop, and dispatches calls
 through `Caller`.
 
-Config lives at `<project>/.san/mcp.json` (San) or
+Config lives at `<project>/.cube/mcp.json` (Cube) or
 `<project>/.claude/mcp_servers.json` (Claude-compat).
 
 ## Contract
@@ -30,7 +30,7 @@ one uses free functions; one stays on the concrete `*Registry`.
 |---|---|---|
 | **Tools** — tool discovery + execution | `interface{ GetToolSchemas; CallTool }` | agent main loop, slash-command tool selector, subagent executor |
 | **Servers** — server listing + connect lifecycle | `interface{ List; Connect; Disconnect; ConnectAll; DisconnectAll; GetConfig }` | `mcp.ConnectServers` (free function), subagent executor |
-| **ConfigStore** — load / edit / save server definitions | free functions `PrepareServerEdit` / `ApplyServerEdit` | `san mcp edit` CLI subcommand |
+| **ConfigStore** — load / edit / save server definitions | free functions `PrepareServerEdit` / `ApplyServerEdit` | `cube mcp edit` CLI subcommand |
 | **Manager** — full server-state mutation (add / remove / set-disabled / set-status) | concrete `*Registry` | TUI `/mcp` selector — needs the wide surface and there is exactly one consumer |
 
 `*Registry` satisfies both interfaces; compile-time checks guarantee

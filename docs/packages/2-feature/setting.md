@@ -6,7 +6,7 @@ layer: feature
 # setting
 
 Data loader, merger, and the central permission decision gate.
-Reads `~/.san/settings.json` and `<project>/.san/settings.json`, merges
+Reads `~/.cube/settings.json` and `<project>/.cube/settings.json`, merges
 project-over-user with documented precedence, and decides allow / deny /
 ask for every tool call.
 

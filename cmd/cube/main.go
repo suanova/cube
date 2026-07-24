@@ -54,7 +54,7 @@ var cliOpts struct {
 func init() {
 	// Load .env file if it exists (silent fail if not found)
 	_ = godotenv.Load()
-	// Initialize logging (enabled via SAN_DEBUG=1)
+	// Initialize logging (enabled via CUBE_DEBUG=1)
 	_ = log.Init()
 
 	// Register flags
@@ -90,14 +90,14 @@ func main() {
 }
 
 var rootCmd = &cobra.Command{
-	Use:   "san [message]",
-	Short: "San - fast, open agent harness for the terminal",
-	Long: `San is a fast, open agent harness for the terminal.
+	Use:   "cube [message]",
+	Short: "Cube - fast, open agent harness for the terminal",
+	Long: `Cube is a fast, open agent harness for the terminal.
 Bring your model, tools, skills, plugins, MCP servers, and subagents.
 
 Non-interactive mode:
-  san -p "your prompt"     Print response and exit
-  echo "msg" | san -p ""   Pipe stdin in print mode`,
+  cube -p "your prompt"     Print response and exit
+  echo "msg" | cube -p ""   Pipe stdin in print mode`,
 	Args: cobra.ArbitraryArgs,
 	Run: func(cmd *cobra.Command, args []string) {
 		printPrompt := cliOpts.print
@@ -176,7 +176,7 @@ var versionCmd = &cobra.Command{
 			return
 		}
 
-		fmt.Printf("san version %s\n", version)
+		fmt.Printf("cube version %s\n", version)
 		if buildTime != "" {
 			fmt.Printf("build: %s\n", buildTime)
 		}
@@ -186,17 +186,17 @@ var versionCmd = &cobra.Command{
 
 var updateCmd = &cobra.Command{
 	Use:   "update",
-	Short: "Check for san updates and install if available",
-	Long: `Check for available san version updates and install the latest version.
+	Short: "Check for cube updates and install if available",
+	Long: `Check for available cube version updates and install the latest version.
 
-Checks the latest release on GitHub and upgrades the san binary if a newer
+Checks the latest release on GitHub and upgrades the cube binary if a newer
 version is available.
 
 The current installed version is read from the binary itself. If a newer
 release is found, the binary is automatically downloaded and replaced.
 
 Example:
-  san update`,
+  cube update`,
 	Args: cobra.NoArgs,
 	RunE: func(cmd *cobra.Command, args []string) error {
 		return runSelfUpdate(cmd.Context())
@@ -206,7 +206,7 @@ Example:
 var helpCmd = &cobra.Command{
 	Use:   "help",
 	Short: "Show help information",
-	Long:  "Display help information about San and its commands.",
+	Long:  "Display help information about Cube and its commands.",
 	Run: func(cmd *cobra.Command, args []string) {
 		printHelp()
 	},
@@ -214,33 +214,33 @@ var helpCmd = &cobra.Command{
 
 func printHelp() {
 	help := `
-San - fast, open agent harness for the terminal
+Cube - fast, open agent harness for the terminal
 
 Usage:
-  san                        Start interactive chat mode
-  san "message"              Interactive mode with initial prompt
-  san -p "prompt"            Non-interactive print mode
-  san [command]              Run a command
+  cube                       Start interactive chat mode
+  cube "message"             Interactive mode with initial prompt
+  cube -p "prompt"           Non-interactive print mode
+  cube [command]             Run a command
 
 Print Mode (non-interactive):
-  san -p "your prompt"       Print response and exit
-  echo "data" | san -p "analyze"  Pipe stdin with prompt
+  cube -p "your prompt"      Print response and exit
+  echo "data" | cube -p "analyze"  Pipe stdin with prompt
 
 Interactive Mode:
-  san                        Start chat
-  san "Explain this code"    Start chat with initial prompt
+  cube                       Start chat
+  cube "Explain this code"   Start chat with initial prompt
 
 Session:
-  san -c, --continue         Resume the most recent session
-  san -r, --resume           Select and resume a previous session
-  san -r <session-id>        Resume a specific session by ID
-  san --plugin-dir <path>    Load plugins from a specific directory
-  san --persona <name>       Activate a persona on startup
+  cube -c, --continue        Resume the most recent session
+  cube -r, --resume          Select and resume a previous session
+  cube -r <session-id>       Resume a specific session by ID
+  cube --plugin-dir <path>   Load plugins from a specific directory
+  cube --persona <name>      Activate a persona on startup
 
 Commands:
   version      Print version and build information
   agent run    Run a headless agent
-  update       Check for san updates and install if available
+  update       Check for cube updates and install if available
   help         Show this help message
 
 Keybindings:
@@ -257,13 +257,13 @@ Slash Commands:
   /help        Show help
 
 Examples:
-  san                        Start interactive chat
-  san "Explain this code"    Interactive with initial prompt
-  san -p "Explain this code" Print response and exit
-  san -c                     Resume previous session
-  san version                Show version
+  cube                       Start interactive chat
+  cube "Explain this code"   Interactive with initial prompt
+  cube -p "Explain this code" Print response and exit
+  cube -c                    Resume previous session
+  cube version               Show version
 
-For more information, visit: https://github.com/genai-io/san
+For more information, visit: https://github.com/suanova/cube
 `
 	fmt.Println(help)
 }

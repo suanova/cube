@@ -1,7 +1,7 @@
 # Binary
 bin/
-/san
-san_*
+/cube
+cube_*
 *.tar.gz
 
 # Environment
@@ -24,6 +24,9 @@ vendor/
 coverage.out
 
 # Local config
+.cube/*
+!.cube/skills/
+!.cube/personas/
 .san/*
 !.san/skills/
 !.san/personas/
@@ -31,5 +34,7 @@ coverage.out
 .mcp.json
 CLAUDE.md
 CLAUDE.local.md
+CUBE.md
+CUBE.local.md
 .autodev/
 /layercheck

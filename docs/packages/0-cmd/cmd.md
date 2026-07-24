@@ -2,7 +2,7 @@
 
 **Layer:** cmd (rank 0, top of the stack)
 
-The `cmd/san` entrypoint: flag parsing, dependency wiring, and the blank
+The `cmd/cube` entrypoint: flag parsing, dependency wiring, and the blank
 imports that trigger each provider package's `init()` registration. It composes
 the layers below it and owns nothing else — all behaviour lives in `1-app` and
 the `2-feature` packages it wires together.

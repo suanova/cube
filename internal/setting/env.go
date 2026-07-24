@@ -1,8 +1,10 @@
 // Package env provides a single place to define environment variables that are
 // exported to child processes (Bash tool, hooks, MCP servers, etc.).
 //
-// Every SAN_* variable is also emitted as a CLAUDE_* alias (so Claude Code
-// plugins work unmodified).
+// Every CUBE_* variable is also emitted as a CLAUDE_* alias (so Claude Code
+// plugins work unmodified) and, during the fork transition, a SAN_* alias (so
+// scripts keyed on the old name keep working). Reads accept any of the three,
+// preferring CUBE_, then SAN_, then CLAUDE_.
 package setting
 
 import (
@@ -11,19 +13,21 @@ import (
 )
 
 const (
-	prefix      = "SAN_"
-	aliasPrefix = "CLAUDE_" // Claude Code compatibility alias
+	prefix       = "CUBE_"
+	legacyPrefix = "SAN_"    // pre-fork name; still read and re-emitted for compat
+	aliasPrefix  = "CLAUDE_" // Claude Code compatibility alias
 )
 
-// aliasPrefixes are the extra prefixes emitted alongside the canonical SAN_
-// variant. CLAUDE_ keeps Claude Code plugins working.
-var aliasPrefixes = []string{aliasPrefix}
+// aliasPrefixes are the extra prefixes emitted alongside the canonical CUBE_
+// variant. CLAUDE_ keeps Claude Code plugins working; SAN_ keeps scripts from
+// the pre-fork name working.
+var aliasPrefixes = []string{legacyPrefix, aliasPrefix}
 
 // EnvPair creates env entries for a single key=value, returning the canonical
-// SAN_ variant plus the CLAUDE_ alias.
+// CUBE_ variant plus the SAN_ and CLAUDE_ aliases.
 //
 //	EnvPair("PROJECT_DIR", "/tmp") →
-//	  ["SAN_PROJECT_DIR=/tmp", "CLAUDE_PROJECT_DIR=/tmp"]
+//	  ["CUBE_PROJECT_DIR=/tmp", "SAN_PROJECT_DIR=/tmp", "CLAUDE_PROJECT_DIR=/tmp"]
 func EnvPair(key, value string) []string {
 	out := make([]string, 0, 1+len(aliasPrefixes))
 	out = append(out, prefix+key+"="+value)
@@ -48,13 +52,20 @@ func EnvPairs(kvs ...string) []string {
 // EnvPairF is like EnvPair but with a formatted suffix on the key.
 //
 //	EnvPairF("PLUGIN_ROOT_%s", "CODEX", "/path") →
-//	  ["SAN_PLUGIN_ROOT_CODEX=/path", "CLAUDE_PLUGIN_ROOT_CODEX=/path"]
+//	  ["CUBE_PLUGIN_ROOT_CODEX=/path", "SAN_PLUGIN_ROOT_CODEX=/path", "CLAUDE_PLUGIN_ROOT_CODEX=/path"]
 func EnvPairF(keyFmt, keyArg, value string) []string {
 	key := fmt.Sprintf(keyFmt, keyArg)
 	return EnvPair(key, value)
 }
 
-// Getenv reads the canonical SAN_<suffix> variable.
+// Getenv reads the canonical CUBE_<suffix> variable, falling back to the
+// legacy SAN_<suffix> and then CLAUDE_<suffix> if the canonical name is unset.
 func Getenv(suffix string) string {
-	return os.Getenv(prefix + suffix)
+	if v, ok := os.LookupEnv(prefix + suffix); ok {
+		return v
+	}
+	if v, ok := os.LookupEnv(legacyPrefix + suffix); ok {
+		return v
+	}
+	return os.Getenv(aliasPrefix + suffix)
 }

@@ -171,7 +171,7 @@ func TestInstall_RelativePathSourceFromManifest(t *testing.T) {
 		t.Fatalf("Install: %v", err)
 	}
 
-	installPath := filepath.Join(cwd, ".san", "plugins", "deploy")
+	installPath := filepath.Join(cwd, ".cube", "plugins", "deploy")
 	if _, err := os.Stat(filepath.Join(installPath, "skills", "deploy", "SKILL.md")); err != nil {
 		t.Fatalf("expected installed plugin content copied: %v", err)
 	}

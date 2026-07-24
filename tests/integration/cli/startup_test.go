@@ -17,12 +17,12 @@ import (
 	session "github.com/genai-io/san/internal/session"
 )
 
-// buildBinary compiles the san binary into a temp file and returns its path.
+// buildBinary compiles the cube binary into a temp file and returns its path.
 // The binary is removed when the test completes.
 func buildBinary(t *testing.T) string {
 	t.Helper()
-	bin := filepath.Join(t.TempDir(), "san-test")
-	cmd := exec.Command("go", "build", "-o", bin, "./cmd/san")
+	bin := filepath.Join(t.TempDir(), "cube-test")
+	cmd := exec.Command("go", "build", "-o", bin, "./cmd/cube")
 	cmd.Dir = projectRoot(t)
 	out, err := cmd.CombinedOutput()
 	if err != nil {
@@ -52,7 +52,7 @@ func projectRoot(t *testing.T) string {
 	}
 }
 
-// TestVersionCommand verifies that "san version" prints version and build
+// TestVersionCommand verifies that "cube version" prints version and build
 // information and exits cleanly without requiring any provider configuration.
 func TestVersionCommand(t *testing.T) {
 	bin := buildBinary(t)
@@ -60,7 +60,7 @@ func TestVersionCommand(t *testing.T) {
 	cmd := exec.Command(bin, "version")
 	out, err := cmd.Output()
 	if err != nil {
-		t.Fatalf("san version exited with error: %v", err)
+		t.Fatalf("cube version exited with error: %v", err)
 	}
 
 	lines := strings.Split(strings.TrimSpace(string(out)), "\n")
@@ -68,12 +68,12 @@ func TestVersionCommand(t *testing.T) {
 		t.Fatalf("expected at least 2 lines of output, got %d:\n%s", len(lines), out)
 	}
 
-	// First line: san version <ver>
+	// First line: cube version <ver>
 	first := strings.TrimSpace(lines[0])
-	if !strings.HasPrefix(first, "san version ") {
-		t.Errorf("expected first line to start with 'san version ', got: %q", first)
+	if !strings.HasPrefix(first, "cube version ") {
+		t.Errorf("expected first line to start with 'cube version ', got: %q", first)
 	}
-	ver := strings.TrimPrefix(first, "san version ")
+	ver := strings.TrimPrefix(first, "cube version ")
 	if ver == "" {
 		t.Error("version string is empty")
 	}
@@ -91,7 +91,7 @@ func TestVersionCommand(t *testing.T) {
 	}
 }
 
-// TestVersionCommandJSON verifies that "san version --json" outputs valid JSON
+// TestVersionCommandJSON verifies that "cube version --json" outputs valid JSON
 // with the expected fields.
 func TestVersionCommandJSON(t *testing.T) {
 	bin := buildBinary(t)
@@ -99,7 +99,7 @@ func TestVersionCommandJSON(t *testing.T) {
 	cmd := exec.Command(bin, "version", "--json")
 	out, err := cmd.Output()
 	if err != nil {
-		t.Fatalf("san version --json exited with error: %v", err)
+		t.Fatalf("cube version --json exited with error: %v", err)
 	}
 
 	var info map[string]string
@@ -121,7 +121,7 @@ func TestVersionCommandJSON(t *testing.T) {
 	}
 }
 
-// TestHelpCommand verifies that "san help" exits cleanly and emits usage text
+// TestHelpCommand verifies that "cube help" exits cleanly and emits usage text
 // without requiring any provider configuration.
 func TestHelpCommand(t *testing.T) {
 	bin := buildBinary(t)
@@ -129,11 +129,11 @@ func TestHelpCommand(t *testing.T) {
 	cmd := exec.Command(bin, "help")
 	out, err := cmd.Output()
 	if err != nil {
-		t.Fatalf("san help exited with error: %v", err)
+		t.Fatalf("cube help exited with error: %v", err)
 	}
 
 	output := string(out)
-	for _, expected := range []string{"-p", "--continue", "--resume", "san -r <session-id>", "--plugin-dir", "--persona", "version"} {
+	for _, expected := range []string{"-p", "--continue", "--resume", "cube -r <session-id>", "--plugin-dir", "--persona", "version"} {
 		if !strings.Contains(output, expected) {
 			t.Errorf("help output missing %q\nfull output:\n%s", expected, output)
 		}
@@ -148,7 +148,7 @@ func TestNonInteractivePrintMode(t *testing.T) {
 	bin := buildBinary(t)
 
 	// Use an isolated HOME directory so that no providers.json from
-	// ~/.san/providers.json is picked up, and unset all API key env vars so
+	// ~/.cube/providers.json is picked up, and unset all API key env vars so
 	// no provider can be initialised via environment.
 	isolatedHome := t.TempDir()
 	env := filteredEnv(

@@ -31,7 +31,7 @@ no producer-side role interface earns its keep — TEMPLATE Rule 3.
 
 | Caller | Methods used |
 |---|---|
-| `cmd/san agent` | `Get` (CLI argument validation) |
+| `cmd/cube agent` | `Get` (CLI argument validation) |
 | TUI view | `ListConfigs` (color enumeration) |
 | Agent build site | `PromptSection` (twice) |
 | TUI selector adapter | full surface — `ListConfigs`, `IsEnabled`, `SetEnabled`, `GetDisabledAt` for the `/agent` menu |
@@ -84,7 +84,7 @@ func ResetDefaultRegistry()           // test-only
   session persistence), and returns the aggregated result.
 - `executor_prompt.go` / `executor_run.go` / `executor_session.go` —
   split executor concerns (charter assembly, run loop, session attribution).
-- `loader.go` — reads markdown agent definitions from `.san/agents/`
+- `loader.go` — reads markdown agent definitions from `.cube/agents/`
   (project, then user), `.claude/agents/` (Claude Code compatible), and
   plugin paths; lower-priority sources load first so higher ones win by
   name. Accepts alias frontmatter keys (`tools`, `allowed-tools`,

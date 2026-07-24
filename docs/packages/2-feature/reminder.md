@@ -12,7 +12,7 @@ conversation history once attached and re-inject on `SessionStart` /
 
 ## Purpose
 
-The system prompt is for things true of *every* San session
+The system prompt is for things true of *every* Cube session
 (identity, policy). Reminders are for things that change *during* a
 session and need to surface mid-conversation without busting the prompt
 cache — currently:

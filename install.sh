@@ -1,8 +1,8 @@
 #!/bin/bash
 set -euo pipefail
 
-REPO="genai-io/san"
-BINARY="san"
+REPO="suanova/cube"
+BINARY="cube"
 INSTALL_DIR="${HOME}/.local/bin"
 
 # Colors
@@ -19,9 +19,9 @@ usage() {
     echo "Usage: $0 [install|upgrade|uninstall]"
     echo ""
     echo "Commands:"
-    echo "  install    Install san (default)"
+    echo "  install    Install cube (default)"
     echo "  upgrade    Upgrade to latest version"
-    echo "  uninstall  Remove san and config"
+    echo "  uninstall  Remove cube and config"
     exit 0
 }
 
@@ -54,12 +54,12 @@ get_latest_version() {
 
 get_download_url() {
     local version="$1"
-    echo "https://github.com/${REPO}/releases/download/v${version}/san_${OS}_${ARCH}.tar.gz"
+    echo "https://github.com/${REPO}/releases/download/v${version}/cube_${OS}_${ARCH}.tar.gz"
 }
 
 do_install() {
     detect_platform
-    
+
     info "Fetching latest version..."
     VERSION=$(get_latest_version)
     [ -z "$VERSION" ] && error "Failed to get latest version"
@@ -69,25 +69,25 @@ do_install() {
         CURRENT=$("$BINARY" version 2>/dev/null | awk '{print $3}' || echo "unknown")
         CURRENT="$(normalize_version "$CURRENT")"
         if [ "$CURRENT" = "$VERSION" ]; then
-            info "✓ san v${VERSION} is already installed"
+            info "✓ cube v${VERSION} is already installed"
             return
         fi
-        info "Upgrading san from v${CURRENT} to v${VERSION}..."
+        info "Upgrading cube from v${CURRENT} to v${VERSION}..."
     else
-        info "Installing san v${VERSION} for ${OS}/${ARCH}..."
+        info "Installing cube v${VERSION} for ${OS}/${ARCH}..."
     fi
 
     # Download and extract
     DOWNLOAD_URL="$(get_download_url "$VERSION")"
-    [ -z "$DOWNLOAD_URL" ] && error "Release asset san_${OS}_${ARCH}.tar.gz not found for v${VERSION}"
+    [ -z "$DOWNLOAD_URL" ] && error "Release asset cube_${OS}_${ARCH}.tar.gz not found for v${VERSION}"
     TMP_DIR=$(mktemp -d)
     trap "rm -rf $TMP_DIR" EXIT
 
-    curl -fL --progress-bar "$DOWNLOAD_URL" -o "$TMP_DIR/san.tar.gz" || error "Download failed"
-    if ! tar -tzf "$TMP_DIR/san.tar.gz" >/dev/null 2>&1; then
+    curl -fL --progress-bar "$DOWNLOAD_URL" -o "$TMP_DIR/cube.tar.gz" || error "Download failed"
+    if ! tar -tzf "$TMP_DIR/cube.tar.gz" >/dev/null 2>&1; then
         error "Downloaded asset is not a valid tar.gz archive"
     fi
-    tar -xzf "$TMP_DIR/san.tar.gz" -C "$TMP_DIR" || error "Extract failed"
+    tar -xzf "$TMP_DIR/cube.tar.gz" -C "$TMP_DIR" || error "Extract failed"
 
     # Install
     mkdir -p "$INSTALL_DIR"
@@ -106,11 +106,11 @@ do_install() {
         warn "  export PATH=\"\$HOME/.local/bin:\$PATH\""
     fi
 
-    info "✓ san v${VERSION} installed to $INSTALL_DIR/$BINARY"
+    info "✓ cube v${VERSION} installed to $INSTALL_DIR/$BINARY"
 }
 
 do_uninstall() {
-    info "Uninstalling san..."
+    info "Uninstalling cube..."
 
     # Remove binary
     if [ -f "$INSTALL_DIR/$BINARY" ]; then
@@ -124,16 +124,17 @@ do_uninstall() {
         warn "Binary not found at $INSTALL_DIR/$BINARY"
     fi
 
-    # Ask about config (~/.san)
-    cfg="$HOME/.san"
-    if [ -d "$cfg" ]; then
-        echo -n "Remove config directory ${cfg}? [y/N] "
-        read -r response < /dev/tty
-        if [[ "$response" =~ ^[Yy]$ ]]; then
-            rm -rf "$cfg"
-            info "✓ Removed config directory ${cfg}"
+    # Ask about config (~/.cube, and the legacy ~/.san from before the fork)
+    for cfg in "$HOME/.cube" "$HOME/.san"; do
+        if [ -d "$cfg" ]; then
+            echo -n "Remove config directory ${cfg}? [y/N] "
+            read -r response < /dev/tty
+            if [[ "$response" =~ ^[Yy]$ ]]; then
+                rm -rf "$cfg"
+                info "✓ Removed config directory ${cfg}"
+            fi
         fi
-    fi
+    done
 
     info "✓ Uninstall complete"
 }

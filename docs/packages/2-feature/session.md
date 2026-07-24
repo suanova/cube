@@ -12,7 +12,7 @@ lives in the `transcript` subpackage.
 ## Purpose
 
 Each san run is a session. Sessions are auto-saved as JSONL transcripts
-under `~/.san/projects/<workdir-hash>/`. `--continue` and `--resume` use the
+under `~/.cube/projects/<workdir-hash>/`. `--continue` and `--resume` use the
 list/load APIs here to restore a previous session's messages; `--fork`
 duplicates one mid-stream.
 
@@ -80,7 +80,7 @@ equivalent.
 - `Setup` (`setup.go`) — concrete implementation, holds `SessionID`,
   `Store`, and the current `Recorder` under a mutex.
 - `Store` (`store.go`) — filesystem-backed JSON store under
-  `~/.san/projects/<hash>/`; provides Save / Load / List / Fork.
+  `~/.cube/projects/<hash>/`; provides Save / Load / List / Fork.
 - `Recorder` (`recorder.go`) — writes the event-sourced transcript
   (one record per inference / tool call / hook / system mutation) into
   the `transcript` subpackage's filesystem store.

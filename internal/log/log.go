@@ -25,14 +25,14 @@ var (
 	devEnabled bool   // Whether DEV_DIR is enabled
 )
 
-// debugEnabled reports whether debug logging is on via SAN_DEBUG=1. Kept local
-// because the log package is an infrastructure leaf and cannot import
-// internal/setting.
+// debugEnabled reports whether debug logging is on via CUBE_DEBUG=1 (falling
+// back to the legacy SAN_DEBUG=1). Kept local because the log package is an
+// infrastructure leaf and cannot import internal/setting.
 func debugEnabled() bool {
-	return os.Getenv("SAN_DEBUG") == "1"
+	return os.Getenv("CUBE_DEBUG") == "1" || os.Getenv("SAN_DEBUG") == "1"
 }
 
-// Init initializes the logger based on SAN_DEBUG env var
+// Init initializes the logger based on CUBE_DEBUG env var
 func Init() error {
 	mu.Lock()
 	defer mu.Unlock()
@@ -42,7 +42,7 @@ func Init() error {
 	}
 	initialized = true
 
-	// Initialize DEV_DIR for JSON debug output (independent of SAN_DEBUG)
+	// Initialize DEV_DIR for JSON debug output (independent of CUBE_DEBUG)
 	if dir := os.Getenv("DEV_DIR"); dir != "" {
 		if err := os.MkdirAll(dir, 0o700); err != nil {
 			return fmt.Errorf("failed to create DEV_DIR: %w", err)

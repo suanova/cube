@@ -38,12 +38,12 @@ jobs:
           go-version: '1.25.8'
           cache: true
       - name: Build
-        run: go build ./cmd/san/
-      - name: Test (cmd/san only — integration tests are Unix-only)
-        run: go test -count=1 ./cmd/san/...
+        run: go build ./cmd/cube/
+      - name: Test (cmd/cube only — integration tests are Unix-only)
+        run: go test -count=1 ./cmd/cube/...
       - name: Smoke test — zip package
         run: |
-          go build -o san.exe ./cmd/san/
-          Compress-Archive -Path san.exe -DestinationPath san_windows_amd64.zip -Force
-          Expand-Archive -Path san_windows_amd64.zip -DestinationPath extracted -Force
-          .\extracted\san.exe version
+          go build -o cube.exe ./cmd/cube/
+          Compress-Archive -Path cube.exe -DestinationPath cube_windows_amd64.zip -Force
+          Expand-Archive -Path cube_windows_amd64.zip -DestinationPath extracted -Force
+          .\extracted\cube.exe version

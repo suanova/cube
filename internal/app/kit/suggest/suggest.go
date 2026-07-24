@@ -259,7 +259,9 @@ func (s *State) sortSuggestions() {
 }
 
 func shouldSkipDirectory(name string) bool {
-	if strings.HasPrefix(name, ".") && name != ".san" {
+	// Don't skip the config directories (.cube and the legacy .san); their
+	// contents (personas, skills, commands) are suggestable.
+	if strings.HasPrefix(name, ".") && name != ".cube" && name != ".san" {
 		return true
 	}
 

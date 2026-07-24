@@ -6,7 +6,7 @@ func TestParseLayerMap(t *testing.T) {
 	md := `
 | Path | Layer | Responsibility |
 | --- | --- | --- |
-| ` + "`cmd/san`" + ` | ` + "`cmd`" + ` | Main CLI binary. |
+| ` + "`cmd/cube`" + ` | ` + "`cmd`" + ` | Main CLI binary. |
 | ` + "`internal/app`" + ` | ` + "`app`" + ` | TUI shell. |
 | ` + "`internal/core`" + ` | ` + "`core`" + ` | Shared contracts. |
 | ` + "`internal/tool`" + ` | ` + "`feature`" + ` | Built-in tools. |
@@ -18,7 +18,7 @@ func TestParseLayerMap(t *testing.T) {
 		t.Fatalf("parseLayerMap() error = %v", err)
 	}
 	want := map[string]string{
-		"cmd/san":       "cmd",
+		"cmd/cube":      "cmd",
 		"internal/app":  "app",
 		"internal/core": "core",
 		"internal/tool": "feature",

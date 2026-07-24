@@ -24,13 +24,13 @@ WHAT THIS PERSONA DOES AND DOES NOT REUSE
 - Ideas: reused. Karpathy's observations are public statements about how LLMs
   behave; the resulting engineering principles (think before coding, simplicity
   first, surgical changes, goal-driven/verifiable execution) are not protectable
-  as ideas, and this persona applies them to San's three-part prompt model.
+  as ideas, and this persona applies them to Cube's three-part prompt model.
 
 - Text: NOT reused. As of this writing multica-ai/andrej-karpathy-skills carries
   no license, so its specific wording is all-rights-reserved and cannot be
   redistributed. None of its prose was copied. Every line in system/*.md here
   was written from scratch to express the same principles in different words,
-  retargeted at San.
+  retargeted at Cube.
 
 The short quotations of Karpathy's own X post that appear in this NOTICE are
 attributed excerpts of a public statement, used to credit the source of the
@@ -40,16 +40,16 @@ ideas — not text taken from the repository above.
 BUNDLED SKILLS
 ==============
 
-skills/code-review — original, written from scratch for San.
+skills/code-review — original, written from scratch for Cube.
 
-skills/refactor — original, written from scratch for San.
+skills/refactor — original, written from scratch for Cube.
 
-skills/simplify — an adaptation of San's own built-in "simplify" skill, used
+skills/simplify — an adaptation of Cube's own built-in "simplify" skill, used
     under the Apache License, Version 2.0.
 
         San — Copyright 2026 Meng Yan
         https://github.com/genai-io/san
-        file .san/skills/simplify/SKILL.md
+        file .cube/skills/simplify/SKILL.md
 
     Kept: the review-then-fix flow and the three lenses (reuse, quality,
     efficiency) with their concrete checklists. Condensed to match the other
@@ -68,7 +68,7 @@ skills/debug — a distilled adaptation of the "investigate" skill from gstack,
     locking, and "a regression means the cause is in the diff". Dropped:
     everything tied to gstack's own harness (its learnings database, freeze
     scripts, gbrain sync, host detection, telemetry). Rewritten and retargeted at
-    San's tools (Grep / Read / Bash); not a verbatim copy.
+    Cube's tools (Grep / Read / Bash); not a verbatim copy.
 
 skills/tdd — a distilled adaptation of the "tdd-workflow" skill from ECC, used
     under the MIT License.
@@ -82,4 +82,4 @@ skills/tdd — a distilled adaptation of the "tdd-workflow" skill from ECC, used
     "test behavior, not implementation / keep tests isolated". Dropped: the
     JavaScript/TypeScript-specific stack (Jest/Vitest/Bun/Playwright, framework
     mock recipes, fixed coverage thresholds). Rewritten language-agnostic and
-    retargeted at San; not a verbatim copy.
+    retargeted at Cube; not a verbatim copy.

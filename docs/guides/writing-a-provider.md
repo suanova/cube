@@ -1,6 +1,6 @@
 # Writing a Provider
 
-Providers connect San to an LLM vendor. Most providers live under
+Providers connect Cube to an LLM vendor. Most providers live under
 `internal/llm/<provider>/` and register themselves at startup so `/model`
 can discover them.
 
@@ -162,7 +162,7 @@ real credentials.
 
 Provider names are defined in `internal/llm/types.go`. Add a new constant if
 the provider is new, then import the package for side-effect registration from
-`cmd/san/main.go`:
+`cmd/cube/main.go`:
 
 ```go
 _ "github.com/genai-io/san/internal/llm/<provider>"
@@ -199,7 +199,7 @@ environment limitation in the PR body.
 ## Common Pitfalls
 
 - **Skipping registration.** If the package is not imported from
-  `cmd/san/main.go`, `/model` will not discover it.
+  `cmd/cube/main.go`, `/model` will not discover it.
 - **Live API tests.** Unit tests should not require a real provider key.
 - **Missing token limits.** Static catalog entries should include useful
   `InputTokenLimit` and `OutputTokenLimit` values when known.

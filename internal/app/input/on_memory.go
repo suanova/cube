@@ -84,7 +84,7 @@ func (m *MemorySelector) EnterSelect(cwd string, width, height int) {
 			"Will be created on edit"),
 
 		m.buildMemoryItem("Project", "project", paths.Project, cwd,
-			"Checked in at .san/SAN.md",
+			"Checked in at .cube/CUBE.md",
 			"Use /init to create"),
 
 		m.buildMemoryItem("Local", "local", paths.Local, cwd,
@@ -331,7 +331,7 @@ func handleInitProject(cwd string, isClaude bool) (string, error) {
 		fileName = "CLAUDE.md"
 	} else {
 		targetDir = confdir.Dir(cwd)
-		fileName = "SAN.md"
+		fileName = "CUBE.md"
 	}
 	filePath := filepath.Join(targetDir, fileName)
 
@@ -351,7 +351,7 @@ func handleInitProject(cwd string, isClaude bool) (string, error) {
 
 func handleInitLocal(cwd string) (string, error) {
 	targetDir := confdir.Dir(cwd)
-	filePath := filepath.Join(targetDir, "SAN.local.md")
+	filePath := filepath.Join(targetDir, "CUBE.local.md")
 
 	if _, err := os.Stat(filePath); err == nil {
 		return fmt.Sprintf("File already exists: %s\nUse /memory edit local to modify it.", filePath), nil
@@ -364,7 +364,7 @@ func handleInitLocal(cwd string) (string, error) {
 		return "", fmt.Errorf("failed to write file %s: %w", filePath, err)
 	}
 
-	memoryAddToGitignore(cwd, "SAN.local.md")
+	memoryAddToGitignore(cwd, "CUBE.local.md")
 
 	return fmt.Sprintf("Created %s (added to .gitignore)\n\nEdit with: /memory edit local", filePath), nil
 }
@@ -622,7 +622,7 @@ func handleMemoryEdit(cwd, scope string) (string, error) {
 		if err != nil {
 			return "", err
 		}
-		memoryAddToGitignore(cwd, "SAN.local.md")
+		memoryAddToGitignore(cwd, "CUBE.local.md")
 		return filePath, nil
 
 	default:
@@ -654,9 +654,9 @@ func ensureMemoryFile(searchPaths []string, template string) (string, error) {
 
 func getMemoryProjectTemplate(cwd string) string {
 	projectName := filepath.Base(cwd)
-	return fmt.Sprintf(`# SAN.md
+	return fmt.Sprintf(`# CUBE.md
 
-This file provides guidance to San when working with code in this repository.
+This file provides guidance to Cube when working with code in this repository.
 
 ## Project Overview
 
@@ -679,9 +679,9 @@ This file provides guidance to San when working with code in this repository.
 }
 
 func getMemoryGlobalTemplate() string {
-	return `# SAN.md
+	return `# CUBE.md
 
-Global instructions for San (applies to all projects).
+Global instructions for Cube (applies to all projects).
 
 ## Coding Preferences
 
@@ -694,7 +694,7 @@ Global instructions for San (applies to all projects).
 }
 
 func getMemoryLocalTemplate() string {
-	return `# SAN.local.md
+	return `# CUBE.local.md
 
 Local instructions for this project (not committed to git).
 
@@ -713,7 +713,7 @@ Use this file for:
 func getMemoryRulesTemplate() string {
 	return `# Example Rule
 
-This file defines specific rules for San to follow.
+This file defines specific rules for Cube to follow.
 
 ## Guidelines
 
@@ -734,7 +734,7 @@ func CreateMemoryFile(filePath, level, cwd string) error {
 		return err
 	}
 	if level == "local" {
-		memoryAddToGitignore(cwd, "SAN.local.md")
+		memoryAddToGitignore(cwd, "CUBE.local.md")
 	}
 	return nil
 }

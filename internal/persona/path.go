@@ -9,28 +9,33 @@ import (
 )
 
 // IsPersonaFile reports whether path points inside a user- or project-level
-// persona directory (any file under <root>/.san/personas/<name>/). Used to
-// trigger a registry reload when a persona file is edited.
+// persona directory (any file under <root>/.cube/personas/<name>/, or the
+// legacy <root>/.san/personas/<name>/). Used to trigger a registry reload
+// when a persona file is edited.
 func IsPersonaFile(cwd, path string) bool {
 	if path == "" {
 		return false
 	}
 	// Cheap substring guard before paying for filepath.Abs/UserHomeDir.
 	slash := filepath.ToSlash(path)
-	if !strings.Contains(slash, "/"+confdir.Name+"/personas/") {
+	if !strings.Contains(slash, "/"+confdir.Name+"/personas/") &&
+		!strings.Contains(slash, "/"+confdir.LegacyName+"/personas/") {
 		return false
 	}
 	return withinAny(path, scopeDirs(cwd, "personas"))
 }
 
-// scopeDirs returns the user- and project-level <sub> directories.
+// scopeDirs returns the user- and project-level <sub> directories, covering
+// both the canonical .cube and legacy .san locations.
 func scopeDirs(cwd, sub string) []string {
 	var out []string
 	if home, err := os.UserHomeDir(); err == nil && home != "" {
 		out = append(out, filepath.Join(home, confdir.Name, sub))
+		out = append(out, filepath.Join(home, confdir.LegacyName, sub))
 	}
 	if cwd != "" {
 		out = append(out, filepath.Join(cwd, confdir.Name, sub))
+		out = append(out, filepath.Join(cwd, confdir.LegacyName, sub))
 	}
 	return out
 }

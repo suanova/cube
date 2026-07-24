@@ -13,13 +13,13 @@ import (
 type Scope string
 
 const (
-	// ScopeUser is ~/.san/plugins/ (personal plugins, default)
+	// ScopeUser is ~/.cube/plugins/ (personal plugins, default)
 	ScopeUser Scope = "user"
 
-	// ScopeProject is .san/plugins/ (team plugins, git-tracked)
+	// ScopeProject is .cube/plugins/ (team plugins, git-tracked)
 	ScopeProject Scope = "project"
 
-	// ScopeLocal is .san/plugins-local/ (local plugins, gitignored)
+	// ScopeLocal is .cube/plugins-local/ (local plugins, gitignored)
 	ScopeLocal Scope = "local"
 
 	// ScopeManaged is managed plugins (read-only, system-level)

@@ -1,7 +1,7 @@
 # Contributor Ladder
 
 Welcome! This contributor ladder outlines the different contributor roles
-in San, along with the responsibilities and privileges that come with
+in Cube, along with the responsibilities and privileges that come with
 them. Community members generally start at the lower rungs and advance as
 their involvement in the project grows. Existing project members are happy
 to help you move up the ladder.
@@ -56,7 +56,7 @@ triaging issues, or helping others in discussions all count.
   - Submit pull requests.
   - Improve documentation.
   - Answer questions in
-    [Discussions](https://github.com/genai-io/san/discussions).
+    [Discussions](https://github.com/suanova/cube/discussions).
   - Test releases and review other contributors' PRs.
 - Privileges:
   - Eligible to become a Reviewer.
@@ -211,7 +211,7 @@ through the same nomination process that first added them.
 
 For questions about the contributor ladder, mentorship, or moving up a
 rung, start a thread in
-[Discussions](https://github.com/genai-io/san/discussions) or reach out to
+[Discussions](https://github.com/suanova/cube/discussions) or reach out to
 the Maintainers listed in the [`OWNERS`](OWNERS) file. For conduct
 concerns see the [Code of Conduct](CODE_OF_CONDUCT.md); for security issues
 see [`SECURITY.md`](SECURITY.md).

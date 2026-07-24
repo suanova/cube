@@ -19,7 +19,7 @@ import (
 )
 
 var (
-	githubLatestRelease = "https://github.com/genai-io/san/releases/latest"
+	githubLatestRelease = "https://github.com/suanova/cube/releases/latest"
 	httpClient          = http.DefaultClient
 )
 
@@ -64,8 +64,8 @@ func runSelfUpdate(ctx context.Context) error {
 	if runtime.GOOS == "windows" {
 		archiveExt = ".zip"
 	}
-	assetName := fmt.Sprintf("san_%s_%s%s", runtime.GOOS, goArch(runtime.GOARCH), archiveExt)
-	downloadURL := fmt.Sprintf("https://github.com/genai-io/san/releases/download/v%s/%s", latestVersion, assetName)
+	assetName := fmt.Sprintf("cube_%s_%s%s", runtime.GOOS, goArch(runtime.GOARCH), archiveExt)
+	downloadURL := fmt.Sprintf("https://github.com/suanova/cube/releases/download/v%s/%s", latestVersion, assetName)
 
 	// Find current binary path
 	exe, err := os.Executable()
@@ -81,7 +81,7 @@ func runSelfUpdate(ctx context.Context) error {
 	// the target binary so the final rename stays within one filesystem
 	// and doesn't hit EXDEV (cross-device link).
 	fmt.Printf("Downloading %s ...\n", assetName)
-	tmpDir, err := os.MkdirTemp(filepath.Dir(exe), ".san-update-*")
+	tmpDir, err := os.MkdirTemp(filepath.Dir(exe), ".cube-update-*")
 	if err != nil {
 		return fmt.Errorf("cannot create temp directory: %w", err)
 	}
@@ -103,10 +103,10 @@ func runSelfUpdate(ctx context.Context) error {
 		}
 	}
 
-	// Determine binary name (san.exe on Windows, san on other platforms)
-	binName := "san"
+	// Determine binary name (cube.exe on Windows, cube on other platforms)
+	binName := "cube"
 	if runtime.GOOS == "windows" {
-		binName = "san.exe"
+		binName = "cube.exe"
 	}
 	binPath := filepath.Join(tmpDir, binName)
 
@@ -154,7 +154,7 @@ func runSelfUpdate(ctx context.Context) error {
 
 	fmt.Printf("Updated to v%s\n", latestVersion)
 	fmt.Printf("Installed to: %s\n", exe)
-	fmt.Println("Restart san to use the new version.")
+	fmt.Println("Restart cube to use the new version.")
 	return nil
 }
 
@@ -188,8 +188,8 @@ func fetchLatestRelease(ctx context.Context) (*releaseInfo, error) {
 		return nil, fmt.Errorf("missing Location header in redirect response")
 	}
 
-	// Location: https://github.com/genai-io/san/releases/tag/v1.21.4
-	version := strings.TrimPrefix(location, "https://github.com/genai-io/san/releases/tag/v")
+	// Location: https://github.com/suanova/cube/releases/tag/v1.21.4
+	version := strings.TrimPrefix(location, "https://github.com/suanova/cube/releases/tag/v")
 	if version == location {
 		return nil, fmt.Errorf("unexpected Location header: %s", location)
 	}

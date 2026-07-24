@@ -6,8 +6,8 @@ Task-oriented how-tos. For conceptual background see
 
 | Guide | Task |
 |---|---|
-| [`getting-started`](getting-started.md) | Install, build, and run San for the first time. |
-| [`inspector`](inspector.md) | Replay session transcripts with `san inspector`. |
+| [`getting-started`](getting-started.md) | Install, build, and run Cube for the first time. |
+| [`inspector`](inspector.md) | Replay session transcripts with `cube inspector`. |
 | [`explore-mode`](explore-mode.md) | Use the read-only Explore subagent for fan-out search. |
 | [`autopilot`](autopilot.md) | Configure the autopilot copilot: steers, mission, the `/autopilot` panel, and the `/goal` preset. |
 | [`writing-a-skill`](writing-a-skill.md) | Author a Skill. |

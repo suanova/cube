@@ -54,9 +54,9 @@ If there are merge conflicts, resolve them before proceeding.
 
 Read the current version and identify changes since the last tag:
 
-1. Read the code version from `cmd/san/main.go`:
+1. Read the code version from `cmd/cube/main.go`:
    ```bash
-   grep 'var version = ' cmd/san/main.go
+   grep 'var version = ' cmd/cube/main.go
    ```
 
 2. Get the latest git tag:
@@ -122,13 +122,13 @@ Use the commit log from Step 1 as source material. Group entries under `Added`, 
 **Contributor attribution:** Every changelog entry must include the author's GitHub handle and a link to the PR or commit, matching the existing format:
 
 ```markdown
-- Description of change ([@username](https://github.com/username) in [#NNN](https://github.com/genai-io/san/pull/NNN))
+- Description of change ([@username](https://github.com/username) in [#NNN](https://github.com/suanova/cube/pull/NNN))
 ```
 
 For direct commits without a PR, use the commit hash:
 
 ```markdown
-- Description of change ([@username](https://github.com/username) in [abcdef1](https://github.com/genai-io/san/commit/abcdef1))
+- Description of change ([@username](https://github.com/username) in [abcdef1](https://github.com/suanova/cube/commit/abcdef1))
 ```
 
 **Exclude:** OWNERS updates, dependabot bumps, and other purely administrative chore commits. Do not list them in the changelog.
@@ -137,7 +137,7 @@ Write only the current version section in `CHANGELOG.md`. Do not pass the entire
 
 ### 3. Bump the version in source code
 
-Update the version string in `cmd/san/main.go`:
+Update the version string in `cmd/cube/main.go`:
 
 ```go
 var version = "<new_version>"
@@ -148,7 +148,7 @@ var version = "<new_version>"
 Stage the version bump and changelog update, then commit with sign-off:
 
 ```bash
-git add cmd/san/main.go CHANGELOG.md
+git add cmd/cube/main.go CHANGELOG.md
 git commit -s -m "chore: bump version to <new_version>"
 ```
 

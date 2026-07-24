@@ -11,7 +11,7 @@ import (
 //go:embed README.md.tmpl
 var readmeTemplate string
 
-// UserDir returns the user-level personas root (~/.san/personas).
+// UserDir returns the user-level personas root (~/.cube/personas).
 func UserDir() (string, error) {
 	home, err := os.UserHomeDir()
 	if err != nil {
@@ -20,7 +20,7 @@ func UserDir() (string, error) {
 	return filepath.Join(confdir.Dir(home), "personas"), nil
 }
 
-// EnsureUserDir creates ~/.san/personas/ and writes README.md if missing.
+// EnsureUserDir creates ~/.cube/personas/ and writes README.md if missing.
 // Idempotent: an existing README is not overwritten.
 func EnsureUserDir() error {
 	dir, err := UserDir()

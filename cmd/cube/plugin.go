@@ -13,7 +13,7 @@ import (
 var pluginCmd = &cobra.Command{
 	Use:   "plugin",
 	Short: "Manage plugins",
-	Long: `Manage plugins for extending San with skills, agents, hooks, and MCP servers.
+	Long: `Manage plugins for extending Cube with skills, agents, hooks, and MCP servers.
 
 Plugins bundle multiple components:
   - Skills: Custom skills invokable via slash commands
@@ -23,11 +23,11 @@ Plugins bundle multiple components:
   - LSP Servers: Language Server Protocol servers
 
 Configuration files:
-  ~/.san/plugins/                  User-level plugins
-  ./.san/plugins/                  Project-level plugins
-  ./.san/plugins-local/            Local plugins (git-ignored)
-  ~/.san/settings.json             Enabled plugins (user)
-  ./.san/settings.json             Enabled plugins (project)`,
+  ~/.cube/plugins/                 User-level plugins
+  ./.cube/plugins/                 Project-level plugins
+  ./.cube/plugins-local/           Local plugins (git-ignored)
+  ~/.cube/settings.json            Enabled plugins (user)
+  ./.cube/settings.json            Enabled plugins (project)`,
 }
 
 var pluginScope string

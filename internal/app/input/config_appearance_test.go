@@ -74,7 +74,7 @@ func TestAppearancePanelEnterSavesAndEmits(t *testing.T) {
 		t.Fatalf("expected ThemeSavedMsg{dark}, got %#v", cmd())
 	}
 
-	raw, err := os.ReadFile(filepath.Join(home, ".san", "settings.json"))
+	raw, err := os.ReadFile(filepath.Join(home, ".cube", "settings.json"))
 	if err != nil {
 		t.Fatalf("settings file not written: %v", err)
 	}
@@ -96,9 +96,9 @@ func TestAppearancePanelEnterSaveFailureSurfacesError(t *testing.T) {
 	home := t.TempDir()
 	t.Setenv("HOME", home)
 	t.Setenv("USERPROFILE", home)
-	// Block the write: a regular file where the .san dir must be makes the
+	// Block the write: a regular file where the .cube dir must be makes the
 	// loader's MkdirAll fail.
-	if err := os.WriteFile(filepath.Join(home, ".san"), []byte("x"), 0o644); err != nil {
+	if err := os.WriteFile(filepath.Join(home, ".cube"), []byte("x"), 0o644); err != nil {
 		t.Fatal(err)
 	}
 
@@ -152,7 +152,7 @@ func TestAppearancePanelContextBarSavesAndEmits(t *testing.T) {
 		t.Fatalf("expected ContextBarSavedMsg{On:true}, got %#v", cmd())
 	}
 
-	raw, err := os.ReadFile(filepath.Join(home, ".san", "settings.json"))
+	raw, err := os.ReadFile(filepath.Join(home, ".cube", "settings.json"))
 	if err != nil {
 		t.Fatalf("settings file not written: %v", err)
 	}

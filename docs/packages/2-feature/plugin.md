@@ -15,7 +15,7 @@ contributions to the consuming feature packages.
 
 ## Purpose
 
-San's "everything else" extension surface. Plugins are how a user
+Cube's "everything else" extension surface. Plugins are how a user
 installs a bundle of skills + agents + commands + MCP servers + hooks in
 one shot. This package handles install/uninstall, marketplace lookup,
 load order, and the cross-cutting callbacks that let `skill`, `subagent`,
@@ -85,7 +85,7 @@ func ResetDefaultRegistry()           // test-only
 
 - `Registry` (`registry.go`) — `Plugin` map keyed by name, enable state
   per scope (user / project).
-- `loader.go` — discovers `.san/plugins/`, `~/.san/plugins/`,
+- `loader.go` — discovers `.cube/plugins/`, `~/.cube/plugins/`,
   `.claude/plugins/`, `~/.claude/plugins/`.
 - `installer.go` — install/uninstall logic, dependency check, version
   pin (~13 KB).
@@ -113,7 +113,7 @@ what is cloned on disk.
 ```mermaid
 flowchart TD
     A["/plugin → Marketplaces → Add"] --> B["AddGitHub / AddDirectory<br/>record source in known_marketplaces.json"]
-    B --> C["Sync: git clone --depth 1<br/>→ ~/.san/plugins/marketplaces/&lt;id&gt;"]
+    B --> C["Sync: git clone --depth 1<br/>→ ~/.cube/plugins/marketplaces/&lt;id&gt;"]
     C --> D{"marketplace.json<br/>has plugins[] ?"}
     D -- yes --> E["MarketplacePlugins:<br/>declared plugins (manifest)"]
     D -- no --> F["scan vendored subdirs<br/>(fallback)"]
@@ -141,8 +141,8 @@ flowchart TD
 | `git-subdir` | `{"source":"git-subdir","url":"…","path":"sub/dir"}` | a subdirectory of that repo |
 | `npm` | `{"source":"npm","package":"@scope/p"}` | npm (parsed; install not yet supported) |
 
-**Scope → install dir:** user → `~/.san/plugins/cache/`, project →
-`.san/plugins/`, local → `.san/plugins-local/`. Enable state lives in
+**Scope → install dir:** user → `~/.cube/plugins/cache/`, project →
+`.cube/plugins/`, local → `.cube/plugins-local/`. Enable state lives in
 the scope's `settings.json` under `enabledPlugins`.
 
 ## Tests

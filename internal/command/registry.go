@@ -81,14 +81,14 @@ func ParseCommand(input string) (cmd string, args string, isCmd bool) {
 type commandScope int
 
 const (
-	scopeUser          commandScope = iota // ~/.san/commands/
-	scopeUserPlugin                        // ~/.san/plugins/*/commands/
-	scopeProjectPlugin                     // .san/plugins/*/commands/
-	scopeProject                           // .san/commands/
+	scopeUser          commandScope = iota // ~/.cube/commands/
+	scopeUserPlugin                        // ~/.cube/plugins/*/commands/
+	scopeProjectPlugin                     // .cube/plugins/*/commands/
+	scopeProject                           // .cube/commands/
 )
 
 // CustomCommand represents a user-defined slash command from
-// ~/.san/commands/, .san/commands/, or a plugin's commands/ directory.
+// ~/.cube/commands/, .cube/commands/, or a plugin's commands/ directory.
 // Unlike active skills, custom commands are never injected into the system
 // prompt — they only execute when the user explicitly invokes /name.
 type CustomCommand struct {
@@ -279,10 +279,10 @@ func (s *Registry) loadAllCustomCommands() []CustomCommand {
 }
 
 // loadCustomCommandsFromDisk loads custom commands from all sources in priority order:
-// 1. ~/.san/commands/        (user level, lowest priority)
-// 2. ~/.san/plugins/*/commands/ (user-plugin)
-// 3. .san/plugins/*/commands/   (project-plugin)
-// 4. .san/commands/          (project level, highest priority)
+// 1. ~/.cube/commands/        (user level, lowest priority)
+// 2. ~/.cube/plugins/*/commands/ (user-plugin)
+// 3. .cube/plugins/*/commands/   (project-plugin)
+// 4. .cube/commands/          (project level, highest priority)
 // Higher-priority commands override lower-priority ones with the same full name.
 func (s *Registry) loadCustomCommandsFromDisk() []CustomCommand {
 	cmdMap := make(map[string]CustomCommand)

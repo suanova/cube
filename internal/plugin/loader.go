@@ -11,8 +11,12 @@ import (
 )
 
 const (
-	// SanPluginDir is the directory containing plugin metadata for San
-	SanPluginDir = ".san-plugin"
+	// CubePluginDir is the directory containing plugin metadata for Cube.
+	CubePluginDir = ".cube-plugin"
+
+	// LegacySanPluginDir is the pre-fork plugin metadata directory. It is
+	// still read as a fallback so existing san plugins keep loading.
+	LegacySanPluginDir = ".san-plugin"
 
 	// ClaudePluginDir is the directory containing plugin metadata for Claude Code
 	ClaudePluginDir = ".claude-plugin"
@@ -22,7 +26,8 @@ const (
 )
 
 // LoadPlugin loads a plugin from a directory.
-// It looks for .san-plugin/plugin.json or .claude-plugin/plugin.json.
+// It looks for .cube-plugin/plugin.json, .san-plugin/plugin.json, or
+// .claude-plugin/plugin.json (in that order of preference).
 func LoadPlugin(path string, scope Scope, source string) (*Plugin, error) {
 	absPath, err := filepath.Abs(path)
 	if err != nil {
@@ -61,10 +66,10 @@ func LoadPlugin(path string, scope Scope, source string) (*Plugin, error) {
 	return plugin, nil
 }
 
-// loadManifest loads the plugin manifest from .san-plugin or .claude-plugin
-// (in that order of preference).
+// loadManifest loads the plugin manifest from .cube-plugin, .san-plugin, or
+// .claude-plugin (in that order of preference).
 func loadManifest(pluginPath string) (*Manifest, error) {
-	for _, metaDir := range []string{SanPluginDir, ClaudePluginDir} {
+	for _, metaDir := range []string{CubePluginDir, LegacySanPluginDir, ClaudePluginDir} {
 		path := filepath.Join(pluginPath, metaDir, ManifestFile)
 		data, err := os.ReadFile(path)
 		if err != nil {

@@ -20,7 +20,7 @@ concurrency:
 
 jobs:
   deploy:
-    if: github.repository == 'genai-io/san'
+    if: github.repository == 'suanova/cube'
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}

@@ -54,12 +54,12 @@ var (
 	brandStarStyle = lipgloss.NewStyle().Foreground(welcomeStar)
 )
 
-// brandMark renders the "< SAN ✦ />" wordmark — teal brackets/word (the shared
+// brandMark renders the "< CUBE ✦ />" wordmark — teal brackets/word (the shared
 // Focus accent) with the star-blue ✦. Used by the startup splash, the live
 // model-change line, and the cold-start loading line so the brand reads
 // identically across all three.
 func brandMark() string {
-	return brandWordStyle.Render("< SAN") + " " + brandStarStyle.Render("✦") + " " + brandWordStyle.Render("/>")
+	return brandWordStyle.Render("< CUBE") + " " + brandStarStyle.Render("✦") + " " + brandWordStyle.Render("/>")
 }
 
 func renderWelcome(info welcomeInfo) string {
@@ -94,7 +94,7 @@ func projectName(p string) string {
 }
 
 func plainWelcome(info welcomeInfo) string {
-	parts := []string{"< SAN ✦ />"}
+	parts := []string{"< CUBE ✦ />"}
 	if proj := projectName(info.CWD); proj != "" {
 		parts = append(parts, proj)
 	}

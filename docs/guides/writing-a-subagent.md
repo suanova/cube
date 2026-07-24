@@ -12,15 +12,15 @@ and [`concepts/extension-model.md`](../concepts/extension-model.md).
 
 | Scope | Path |
 |---|---|
-| Project | `<project>/.san/agents/<name>.md` |
-| User | `~/.san/agents/<name>.md` |
+| Project | `<project>/.cube/agents/<name>.md` |
+| User | `~/.cube/agents/<name>.md` |
 | Claude-compat | `<project>/.claude/agents/<name>.md`, `~/.claude/agents/<name>.md` |
 
 Project overrides user overrides Claude-compat by `name`.
 
 ## Minimal Example
 
-`./.san/agents/test-runner.md`:
+`./.cube/agents/test-runner.md`:
 
 ```markdown
 ---
@@ -75,7 +75,7 @@ a connected provider:
   provider.
 
 The vendor names the model family, not its hosting platform: Claude on Vertex
-is still `anthropic/…`. If unavailable, San uses the parent's provider and
+is still `anthropic/…`. If unavailable, Cube uses the parent's provider and
 model.
 
 The foreground agent selects an agent by `description` / `when-to-use`; that
@@ -112,7 +112,7 @@ The foreground agent calls the `Agent` tool with:
 }
 ```
 
-San:
+Cube:
 
 1. Looks up `test-runner` in the subagent registry.
 2. Builds a `core.Agent` with the subagent's charter and tool subset.
@@ -133,7 +133,7 @@ A background subagent registers with the broker while running:
 ## Trying It
 
 1. Save the agent file.
-2. Restart `san`.
+2. Restart `cube`.
 3. Ask the foreground model something that should trigger spawning:
    "use the test-runner agent to check whether tests pass".
 4. Watch the task panel for a background subagent's progress; its final
@@ -151,7 +151,7 @@ A background subagent registers with the broker while running:
 - **`bypassPermissions` on a write-class subagent.** Verify carefully
   — the subagent has no human in the loop.
 - **Same name in several locations.** Priority is project `.san` > user
-  `~/.san` > project `.claude` > user `~/.claude` > plugins; the
+  `~/.cube` > project `.claude` > user `~/.claude` > plugins; the
   higher-priority definition wins.
 
 ## See Also

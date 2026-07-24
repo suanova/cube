@@ -21,7 +21,7 @@ argument-hint: "[--fix] [focus area]"
 Review the changed code for **correctness bugs** — cases where it does the wrong
 thing, crashes, corrupts state, or breaks a contract. This skill is deliberately
 scoped to bugs. Do not report reuse, quality, style, or efficiency cleanups here;
-those belong to a separate cleanup pass (San's `simplify` skill, where present).
+those belong to a separate cleanup pass (Cube's `simplify` skill, where present).
 
 If the arguments include `--fix`, apply fixes after reporting. Otherwise report
 only and offer to fix. A leading focus area (e.g. `concurrency`) narrows the

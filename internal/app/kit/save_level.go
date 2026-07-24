@@ -5,7 +5,7 @@ type SaveLevel int
 
 const (
 	SaveLevelProject SaveLevel = iota // Save to .san/<feature>.json
-	SaveLevelUser                     // Save to ~/.san/<feature>.json
+	SaveLevelUser                     // Save to ~/.cube/<feature>.json
 )
 
 // String returns the display name for the save level.
