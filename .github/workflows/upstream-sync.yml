@@ -1,0 +1,23 @@
+name: Upstream Sync
+
+on:
+  schedule:
+    - cron: '0 6 * * 1'    # every Monday at 6am UTC
+  workflow_dispatch:         # trigger manually to test
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pull-requests: write
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: suanova/upstream-semantic-sync@v1
+        with:
+          anthropic_auth_token: ${{ secrets.ANTHROPIC_AUTH_TOKEN }}
+          anthropic_base_url: ${{ secrets.ANTHROPIC_BASE_URL }}
+          upstream_repo: 'https://github.com/genai-io/san'
+          upstream_branch: 'main'
+          max_risk: 'medium'
