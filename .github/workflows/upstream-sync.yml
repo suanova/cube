@@ -15,6 +15,7 @@ jobs:
       - uses: actions/checkout@v4
 
       - uses: suanova/upstream-semantic-sync@v1
+        id: sync
         with:
           anthropic_auth_token: ${{ secrets.ANTHROPIC_AUTH_TOKEN }}
           anthropic_base_url: ${{ secrets.ANTHROPIC_BASE_URL }}
@@ -23,3 +24,12 @@ jobs:
           upstream_repo: 'https://github.com/genai-io/san'
           upstream_branch: 'main'
           max_risk: 'medium'
+          verbose: 'true'
+
+      - name: Upload sync artifacts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: sync-artifacts-${{ github.run_number }}
+          path: knowledge/.sync-artifacts/
+          retention-days: 30
