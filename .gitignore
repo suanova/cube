@@ -38,3 +38,6 @@ CUBE.md
 CUBE.local.md
 .autodev/
 /layercheck
+knowledge/.sync-artifacts/
+knowledge/.upstream-cache/
+
