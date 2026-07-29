@@ -100,7 +100,17 @@ func RenderToolResultInline(data ToolResultData, mdRenderer *MDRenderer) string 
 	case tool.ToolAgent, tool.ToolSendMessage:
 		return renderTaskResultInline(data, mdRenderer)
 	case tool.ToolEdit, tool.ToolWrite:
+		if data.Nested {
+			return renderNestedFileChangeResultInline(data)
+		}
 		return renderFileChangeResultInline(data)
+	case tool.ToolRead:
+		if data.Nested {
+			return renderNestedReadResultInline(data)
+		}
+		return renderGenericToolResultInline(data)
+	case tool.ToolBash:
+		return renderBashToolResultInline(data)
 	case tool.ToolAskUserQuestion:
 		return renderAskUserResultInline(data)
 	}
@@ -119,15 +129,7 @@ func renderFileChangeResultInline(data ToolResultData) string {
 		return renderGenericToolResultInline(data)
 	}
 
-	var summary string
-	switch {
-	case details.IsNewFile:
-		summary = fmt.Sprintf("new file · %d lines", details.AddedLines)
-	case details.EditCount > 0:
-		summary = fmt.Sprintf("%d replacements · +%d -%d", details.EditCount, details.AddedLines, details.RemovedLines)
-	default:
-		summary = fmt.Sprintf("rewrote · +%d -%d", details.AddedLines, details.RemovedLines)
-	}
+	summary := fileChangeSummary(details)
 
 	var sb strings.Builder
 	sb.WriteString(toolResultStyle.Render(fmt.Sprintf("  %s  %s → %s", toolResultIcon(false), data.ToolName, summary)) + "\n")
@@ -145,6 +147,70 @@ func renderFileChangeResultInline(data ToolResultData) string {
 		sb.WriteString(truncatedStyle.Render(fmt.Sprintf("     … diff truncated (%d more lines)", details.TruncatedDiffLines)) + "\n")
 	}
 	return sb.String()
+}
+
+func renderNestedFileChangeResultInline(data ToolResultData) string {
+	content := data.Content
+	state := "completed"
+	style := toolResultStyle
+
+	if data.IsError {
+		style = errorStyle
+		lines := strings.Split(strings.TrimPrefix(content, "Error: "), "\n")
+		state = "failed"
+		if len(lines) > 0 && lines[0] != "" {
+			state += ": " + lines[0]
+			content = strings.Join(lines[1:], "\n")
+		}
+	} else if details, ok := data.Details.(toolresult.FileChangeDetails); ok {
+		state = fileChangeSummary(details)
+		content = ""
+	} else {
+		state, content = nestedFileChangeFallbackState(data)
+	}
+
+	var sb strings.Builder
+	sb.WriteString(style.Render("  └ "+state) + "\n")
+	if (data.Expanded || data.IsError) && content != "" {
+		for line := range strings.SplitSeq(content, "\n") {
+			sb.WriteString(toolResultExpandedStyle.Render("  "+line) + "\n")
+		}
+	}
+
+	if !data.IsError {
+		details, ok := data.Details.(toolresult.FileChangeDetails)
+		if !ok {
+			return sb.String()
+		}
+		width := data.Width
+		if width <= 0 {
+			width = 80
+		}
+		block, _ := RenderStoredFileDiff(details.UnifiedDiff, width, 0)
+		sb.WriteString(block)
+		if details.TruncatedDiffLines > 0 {
+			sb.WriteString(truncatedStyle.Render(fmt.Sprintf("     … diff truncated (%d more lines)", details.TruncatedDiffLines)) + "\n")
+		}
+	}
+	return sb.String()
+}
+
+func nestedFileChangeFallbackState(data ToolResultData) (state, content string) {
+	return extractParenContent(data.Content, "completed"), data.Content
+}
+
+func fileChangeSummary(details toolresult.FileChangeDetails) string {
+	parts := make([]string, 0, 2)
+	if details.AddedLines > 0 {
+		parts = append(parts, fmt.Sprintf("+%d", details.AddedLines))
+	}
+	if details.RemovedLines > 0 {
+		parts = append(parts, fmt.Sprintf("-%d", details.RemovedLines))
+	}
+	if len(parts) == 0 {
+		return "no changes"
+	}
+	return strings.Join(parts, " ")
 }
 
 func renderGenericToolResultInline(data ToolResultData) string {
@@ -796,6 +862,50 @@ func extractParenContent(s, fallback string) string {
 	return s[start+1 : start+end]
 }
 
+func renderNestedReadResultInline(data ToolResultData) string {
+	if data.IsError {
+		var sb strings.Builder
+		for line := range strings.SplitSeq(strings.TrimPrefix(data.Content, "Error: "), "\n") {
+			sb.WriteString(toolResultExpandedStyle.Render(line) + "\n")
+		}
+		sb.WriteString(errorStyle.Render("  └ failed") + "\n")
+		return sb.String()
+	}
+
+	var sb strings.Builder
+	content := strings.TrimSuffix(data.Content, "\n")
+	if content != "" {
+		for line := range strings.SplitSeq(content, "\n") {
+			sb.WriteString(toolResultExpandedStyle.Render(line) + "\n")
+		}
+	}
+	sb.WriteString(toolResultStyle.Render("  └ "+formatReadResultSummary(content)) + "\n")
+	return sb.String()
+}
+
+func formatReadResultSummary(content string) string {
+	count := 0
+	for line := range strings.SplitSeq(content, "\n") {
+		prefix, _, ok := strings.Cut(line, "\t")
+		if !ok {
+			continue
+		}
+		if _, err := strconv.Atoi(strings.TrimSpace(prefix)); err == nil {
+			count++
+		}
+	}
+	if count > 0 {
+		return fmt.Sprintf("%d lines", count)
+	}
+	if strings.HasPrefix(content, "file exists but is empty:") {
+		return "empty file"
+	}
+	if strings.HasPrefix(content, "no lines at offset ") {
+		return "no lines"
+	}
+	return "no output"
+}
+
 func formatLineCount(content string) string {
 	trimmed := strings.TrimSuffix(content, "\n")
 	if trimmed == "" {
@@ -820,7 +930,7 @@ func renderToolLineWithIcon(label string, width int, iconText string) string {
 // command body lines up in one column with the "$" as a hanging prompt to its
 // left. The "$" aligns with the "⎿" result marker below, while the command text
 // aligns with the result's tool label (for example, "Bash").
-const bashPrompt = "  $  "
+const bashPrompt = "  $ "
 
 // renderBashToolCall renders a Bash tool call so its command is always readable
 // in full. A short single-line command keeps the compact Bash(cmd) label; a
@@ -872,6 +982,37 @@ func renderBashToolCall(input string, width int, icon string) string {
 
 // extractBashCommand pulls the command and optional description out of a Bash
 // tool call's raw JSON input.
+func renderBashToolResultInline(data ToolResultData) string {
+	toolName := data.ToolName
+	if toolName == "" {
+		toolName = "Bash"
+	}
+	sizeInfo := formatToolResultSize(toolName, data.Content)
+	if data.IsError {
+		sizeInfo = "failed"
+	}
+	icon := toolResultIcon(data.IsError)
+
+	summaryStyle := toolResultStyle
+	if data.IsError {
+		summaryStyle = errorStyle
+	}
+
+	var sb strings.Builder
+	sb.WriteString(summaryStyle.Render(fmt.Sprintf("  %s  %s → %s", icon, toolName, sizeInfo)) + "\n")
+
+	showBody := (data.Expanded || data.IsError) && data.Content != ""
+	if !showBody {
+		sb.WriteString(toolResultStyle.Render("  ┊") + "\n")
+	}
+	if showBody {
+		for line := range strings.SplitSeq(data.Content, "\n") {
+			sb.WriteString(toolResultExpandedStyle.Render(line) + "\n")
+		}
+	}
+	return sb.String()
+}
+
 func extractBashCommand(input string) (command, description string) {
 	var params struct {
 		Command     string `json:"command"`

@@ -169,7 +169,11 @@ func Test_renderBashToolCallShowsShellPrompt(t *testing.T) {
 	if !strings.HasPrefix(rows[0], bashPrompt) {
 		t.Fatalf("first command row should carry the %q prompt: %q", bashPrompt, rows[0])
 	}
-	// Continuations hang under the command text: a blank indent the width of the
+	// The command text starts immediately after the single space following "$".
+	if got := strings.TrimPrefix(rows[0], bashPrompt); !strings.HasPrefix(got, "git log") {
+		t.Fatalf("command should follow the prompt without extra spacing: %q", rows[0])
+	}
+
 	// prompt, so command text lines up down one column and the prompt never repeats.
 	contIndent := strings.Repeat(" ", lipgloss.Width(bashPrompt))
 	for i, row := range rows[1:] {
@@ -178,14 +182,10 @@ func Test_renderBashToolCallShowsShellPrompt(t *testing.T) {
 		}
 	}
 
-	// The "$" sits in the "⎿" result column, so the two markers line up down the left.
-	resultPrefix := "  ⎿  "
-	if strings.IndexByte(bashPrompt, '$') != strings.Index(resultPrefix, "⎿") {
-		t.Fatalf("prompt $ column must equal the result ⎿ column")
-	}
-	// The command after "$" starts where the result's Bash label starts.
-	if lipgloss.Width(bashPrompt) != lipgloss.Width(resultPrefix) {
-		t.Fatalf("command indent width = %d, want result label indent %d", lipgloss.Width(bashPrompt), lipgloss.Width(resultPrefix))
+	// The prompt and nested result markers occupy the same column.
+	resultPrefix := "  └ "
+	if strings.IndexByte(bashPrompt, '$') != strings.Index(resultPrefix, "└") {
+		t.Fatalf("prompt $ column must equal the result └ column")
 	}
 }
 
@@ -822,7 +822,7 @@ func TestRenderToolResultInlineShowsEditSummary(t *testing.T) {
 		UnifiedDiff:  "@@ -1 +1 @@\n-old\n+new",
 	}
 	result := stripANSI(RenderToolResultInline(ToolResultData{ToolName: "Edit", Details: details}, nil))
-	if !strings.Contains(result, "2 replacements · +3 -1") {
+	if !strings.Contains(result, "+3 -1") {
 		t.Fatalf("successful Edit summary = %q", result)
 	}
 	// The diff now shows by default, in gutter-and-marker form.
@@ -847,7 +847,21 @@ func TestRenderToolResultInlineShowsEditSummary(t *testing.T) {
 	}
 }
 
-func TestRenderToolCallsShowsEditResult(t *testing.T) {
+func TestRenderToolCallsKeepsBashConnectorWhenOutputIsCollapsed(t *testing.T) {
+	call := core.ToolCall{ID: "bash-1", Name: "Bash", Input: `{"command":"git status"}`}
+	rendered := stripANSI(RenderToolCalls(ToolCallsParams{
+		ToolCalls: []core.ToolCall{call},
+		ResultMap: map[string]ToolResultData{
+			call.ID: {ToolName: "Bash", Content: "on main\nnothing to commit"},
+		},
+		Width: 100,
+	}))
+	if !strings.Contains(rendered, "  $ git status\n  ┊\n  └ 2 lines\n") {
+		t.Fatalf("collapsed Bash output should retain its connector, got %q", rendered)
+	}
+}
+
+func TestRenderToolCallsNestsEditResultUnderPath(t *testing.T) {
 	call := core.ToolCall{
 		ID:    "edit-1",
 		Name:  "Edit",
@@ -856,15 +870,85 @@ func TestRenderToolCallsShowsEditResult(t *testing.T) {
 	rendered := stripANSI(RenderToolCalls(ToolCallsParams{
 		ToolCalls: []core.ToolCall{call},
 		ResultMap: map[string]ToolResultData{
-			call.ID: {ToolName: "Edit", Content: "Edited internal/app/view.go"},
+			call.ID: {ToolName: "Edit", Content: "Edited internal/app/view.go", Details: toolresult.FileChangeDetails{
+				Path: "internal/app/view.go", EditCount: 1, AddedLines: 1, RemovedLines: 1,
+				UnifiedDiff: "@@ -1 +1 @@\n-old\n+new",
+			}},
 		},
 		Width: 100,
 	}))
-	if !strings.Contains(rendered, "Edit(internal/app/view.go)") {
-		t.Fatalf("completed Edit call should remain visible, got %q", rendered)
+
+	if strings.Count(rendered, "Edit") != 1 {
+		t.Fatalf("Edit should be named only in its call header, got %q", rendered)
 	}
-	if !strings.Contains(rendered, "Edit →") {
-		t.Fatalf("Edit result should be visible, got %q", rendered)
+	if !strings.Contains(rendered, "Edit(internal/app/view.go)\n  └ +1 -1\n") {
+		t.Fatalf("Edit result should nest its summary under the path, got %q", rendered)
+	}
+	if !strings.Contains(rendered, "  ┊    1 - old") || !strings.Contains(rendered, "  ┊    1 + new") {
+		t.Fatalf("Edit result should retain its rendered diff, got %q", rendered)
+	}
+	if strings.Contains(rendered, "Edited internal/app/view.go") {
+		t.Fatalf("Edit result should not duplicate its call path, got %q", rendered)
+	}
+}
+
+func TestRenderToolCallsNestsWriteResultUnderPath(t *testing.T) {
+	call := core.ToolCall{ID: "write-1", Name: "Write", Input: `{"path":"internal/app/new.go","content":"package app"}`}
+	rendered := stripANSI(RenderToolCalls(ToolCallsParams{
+		ToolCalls: []core.ToolCall{call},
+		ResultMap: map[string]ToolResultData{
+			call.ID: {ToolName: "Write", Content: "Wrote internal/app/new.go", Details: toolresult.FileChangeDetails{
+				Path: "internal/app/new.go", IsNewFile: true, AddedLines: 1,
+				UnifiedDiff: "@@ -0,0 +1 @@\n+package app",
+			}},
+		},
+		Width: 100,
+	}))
+
+	if strings.Count(rendered, "Write") != 1 {
+		t.Fatalf("Write should be named only in its call header, got %q", rendered)
+	}
+	if !strings.Contains(rendered, "Write(internal/app/new.go)\n  └ new file · 1 lines\n") {
+		t.Fatalf("Write result should nest its summary under the path, got %q", rendered)
+	}
+	if !strings.Contains(rendered, "  ┊    1 + package app") {
+		t.Fatalf("Write result should retain its rendered diff, got %q", rendered)
+	}
+}
+
+func TestRenderToolCallsNestsFileChangeResultWithoutDetails(t *testing.T) {
+	call := core.ToolCall{ID: "edit-1", Name: "Edit", Input: `{"path":"internal/app/view.go","edits":[]}`}
+	rendered := stripANSI(RenderToolCalls(ToolCallsParams{
+		ToolCalls: []core.ToolCall{call},
+		ResultMap: map[string]ToolResultData{
+			call.ID: {ToolName: "Edit", Content: "Edited internal/app/view.go (1 replacement(s), +1 -1)"},
+		},
+		Width: 100,
+	}))
+
+	if strings.Count(rendered, "Edit") != 1 {
+		t.Fatalf("Edit should be named only in its call header, got %q", rendered)
+	}
+	if !strings.Contains(rendered, "Edit(internal/app/view.go)\n  └ 1 replacement(s), +1 -1\n") {
+		t.Fatalf("Edit fallback result should retain its summary, got %q", rendered)
+	}
+}
+
+func TestRenderToolCallsNestsFileChangeFailureUnderPath(t *testing.T) {
+	call := core.ToolCall{ID: "edit-1", Name: "Edit", Input: `{"path":"internal/app/view.go","edits":[]}`}
+	rendered := stripANSI(RenderToolCalls(ToolCallsParams{
+		ToolCalls: []core.ToolCall{call},
+		ResultMap: map[string]ToolResultData{
+			call.ID: {ToolName: "Edit", Content: "Error: oldText was not found\nmatching lines:\n     1\tactual", IsError: true},
+		},
+		Width: 100,
+	}))
+
+	if strings.Count(rendered, "Edit") != 1 {
+		t.Fatalf("Edit should be named only in its call header, got %q", rendered)
+	}
+	if !strings.Contains(rendered, "  └ failed: oldText was not found\n      matching lines:\n           1    actual\n") {
+		t.Fatalf("Edit failure and details should nest under its path, got %q", rendered)
 	}
 }
 

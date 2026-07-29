@@ -589,9 +589,9 @@ func hasNestedCmdSubst(node syntax.Node) bool {
 // ---------------------------------------------------------------------------
 // Network egress & remote-code-execution detection
 //
-// These land in the confirmation band (Step 3 of the permission pipeline;
-// bypass mode skips it), so they escalate to the user and are never delegated
-// to the auto-review agent.
+// These land in the unrecoverable confirmation tier (Step 4 of the permission
+// pipeline; bypass mode skips it), so they escalate to the user and are never
+// delegated to the auto-review agent.
 // They are the two categories where a wrong "allow" is both irreversible and a
 // prime prompt-injection payload: shipping local data off the machine, and
 // executing code fetched from the network.
