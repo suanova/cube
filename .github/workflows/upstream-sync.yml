@@ -5,6 +5,10 @@ on:
     - cron: '0 6 * * 1'    # every Monday at 6am UTC
   workflow_dispatch:         # trigger manually to test
 
+permissions:
+  contents: write
+  pull-requests: write
+
 jobs:
   sync:
     runs-on: ubuntu-latest
