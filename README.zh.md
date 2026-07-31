@@ -43,7 +43,7 @@ Cube 是一个开源的**终端 Agent 运行框架** —— 一个原生 Go 二�
 
 </details>
 
-- **模型** —— Anthropic、OpenAI、Google、DeepSeek、Moonshot、Alibaba、MiniMax、Z.ai（GLM）、SenseNova、Mimo、Volcengine（Ark）、Ollama（本地）、Agnes-AI。`/model`
+- **模型** —— Anthropic、OpenAI、Google、DeepSeek、Moonshot、Alibaba、MiniMax、Z.ai（GLM）、SenseNova、Mimo、Volcengine（Ark）、Ollama（本地）、Agnes-AI。`/models`
 - **搜索** —— Exa、Tavily、Brave、Serper。`/search`
 - **人设与扩展** —— 可复用的 persona 配置，加上 Claude Code 的 skills、plugins、MCP servers、hooks 与沙箱化 subagents —— 全部无需改动即可运行。`/persona`
 - **自我学习** —— 可选开启；把近期工作沉淀为持久记忆与可复用技能，节奏与容量上限均可配置。*（Level 1；更高等级仍在路上。）*
@@ -123,13 +123,13 @@ cube mcp <add|list|remove|...>                 # 管理 MCP 服务器
 
 | 操作 | 命令 / 快捷键 |
 |---|---|
-| 选择 / 切换模型 | `/model` —— 保存到 `~/.cube/providers.json` |
+| 选择 / 切换模型 | `/models` —— 保存到 `~/.cube/providers.json` |
 | 切换 thinking 级别 | `Ctrl+T` 或 `/think`（可选级别因提供商而异） |
 | 切换权限模式 | `Shift+Tab`（询问 · 自动接受 · 自动审查） |
 | 搜索 / 人设 / 记忆 | `/search` · `/persona` · `/memory` |
 | 技能 / 代理 / 工具 | `/skills` · `/agents` · `/tools` |
 | 插件 / MCP / 配置 | `/plugin` · `/mcp` · `/config` |
-| 会话 / 循环 / 其他 | `/fork` · `/compact` · `/loop` · `/glob` · `/init` · `/clear` |
+| 会话 / 循环 / 其他 | `/fork` · `/compact` · `/loop` · `/init` · `/clear` |
 | 全部 slash 命令 | `/help` |
 | 发送 · 换行 · 停止 | `Enter` · `Alt+Enter` · `Esc` |
 | 展开工具 · 取消 · 退出 | `Ctrl+O` · `Ctrl+C` · `Ctrl+D` |
@@ -146,7 +146,7 @@ API Key：设置对应的环境变量（见下方凭据表）或在首次启动�
 | 服务 | 环境变量 |
 |:--------|:---------|
 | **Anthropic** (Claude) | `ANTHROPIC_API_KEY` 或 [Vertex AI](https://cloud.google.com/vertex-ai/generative-ai/docs/partner-models/claude) |
-| **OpenAI** (GPT, o 系列, Codex) | `OPENAI_API_KEY`，或使用 ChatGPT 订阅（通过 `/model` 登录） |
+| **OpenAI** (GPT, o 系列, Codex) | `OPENAI_API_KEY`，或使用 ChatGPT 订阅（通过 `/models` 登录） |
 | **Google** (Gemini) | `GOOGLE_API_KEY` |
 | **DeepSeek** (DeepSeek V4) | `DEEPSEEK_API_KEY` |
 | **Moonshot** (Kimi) | `MOONSHOT_API_KEY` |
