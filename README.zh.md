@@ -116,7 +116,7 @@ cube --resume                    # 选择历史会话恢复
 
 # 子命令（运行 `cube <command> --help` 查看完整列表）
 cube inspector                   # 会话转录查看器
-cube agent run --type Explore --prompt "..."   # 运行 headless agent
+cube agent run --prompt "..."                    # 运行 headless agent
 cube plugin <list|install|enable|...>          # 管理插件
 cube mcp <add|list|remove|...>                 # 管理 MCP 服务器
 ```
@@ -176,7 +176,7 @@ settings.json     # 权限、hooks、env、当前 persona
 skills.json       # 技能状态
 personas/         # persona 包：系统 prompt 片段、技能、设置
 skills/           # 自定义技能定义
-agents/           # 自定义 agent 定义
+agents/           # agent 定义
 commands/         # 自定义 slash 命令
 plugins/          # 已安装插件
 projects/         # 会话记录与索引

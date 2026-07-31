@@ -120,7 +120,7 @@ cube --resume                    # pick a past session to resume
 
 # Subcommands (run `cube <command> --help` for the full list)
 cube inspector                   # session transcript viewer
-cube agent run --type general-purpose --prompt "..."  # run a headless agent
+cube agent run --prompt "..."                     # run a headless agent
 cube plugin <list|install|enable|...>          # manage plugins
 cube mcp <add|list|remove|...>                 # manage MCP servers
 ```
@@ -180,7 +180,7 @@ settings.json     # Permissions, hooks, env, active persona
 skills.json       # Skill states
 personas/         # Persona bundles: system prompt parts, skills, settings
 skills/           # Custom skill definitions
-agents/           # Custom agent definitions
+agents/           # Agent definitions
 commands/         # Custom slash commands
 plugins/          # Installed plugins
 projects/         # Session transcripts + indexes

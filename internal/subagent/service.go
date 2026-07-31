@@ -1,5 +1,5 @@
-// Package subagent owns the registry of agent type definitions (markdown
-// files under ~/.cube/agents/ and <project>/.san/agents/) plus the
+// Package subagent owns the registry of agent definitions (markdown
+// files under ~/.cube/agents/ and <project>/.cube/agents/) plus the
 // *Executor that spawns one of them as a background core.Agent for a
 // single invocation.
 //
@@ -22,7 +22,7 @@ type Options struct {
 	PluginAgentPaths func() []PluginAgentPath
 }
 
-// Initialize loads custom agents from all sources and initializes state stores.
+// Initialize loads agents from all sources and initializes state stores.
 func Initialize(opts Options) error {
 	ClearPluginAgentPaths()
 
@@ -32,7 +32,7 @@ func Initialize(opts Options) error {
 		}
 	}
 
-	LoadCustomAgents(opts.CWD)
+	LoadAgents(opts.CWD)
 
 	if err := defaultRegistry.InitStores(opts.CWD); err != nil {
 		return fmt.Errorf("failed to initialize agent stores: %w", err)
