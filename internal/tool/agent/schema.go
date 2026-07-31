@@ -66,7 +66,7 @@ var agentToolParameters = map[string]any{
 		},
 		"name": map[string]any{
 			"type":        "string",
-			"description": "Optional agent name.",
+			"description": "Choose an available agent, or name a new general-purpose agent for this task. New names are for display only.",
 		},
 		"run_in_background": map[string]any{
 			"type":        "boolean",
