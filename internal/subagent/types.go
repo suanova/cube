@@ -297,7 +297,7 @@ func parseNamedToolRule(name string, value *yaml.Node) (ToolRule, bool, error) {
 	return ToolRule{}, false, fmt.Errorf("unsupported rule for tool %q", name)
 }
 
-// AgentConfig defines the configuration for an agent type.
+// AgentConfig defines an agent.
 type AgentConfig struct {
 	Name        string `yaml:"name" json:"name"`
 	Description string `yaml:"description" json:"description"`
@@ -329,6 +329,10 @@ type AgentConfig struct {
 	Source       string   `yaml:"-" json:"source,omitempty"`
 	McpServers   []string `yaml:"mcp-servers,omitempty" json:"mcp_servers,omitempty"`
 	SourceFile   string   `yaml:"-" json:"-"`
+
+	// displayOnly marks a runtime-only base-template config whose Name is just a
+	// UI label. It is never loaded from an agent definition.
+	displayOnly bool
 
 	systemPromptOnce sync.Once `yaml:"-" json:"-"`
 }
@@ -362,8 +366,12 @@ type AgentResult struct {
 	Error          string
 }
 
-// defaultMaxSteps is the default maximum number of LLM inference steps.
-const defaultMaxSteps = 100
+const (
+	baseAgentDescription = "Subagent for research and implementation tasks."
+
+	// defaultMaxSteps is both the default and minimum number of LLM inference steps.
+	defaultMaxSteps = 500
+)
 
 // modelAliases maps short model aliases to current-generation model ids.
 // Un-dated ids resolve on Anthropic-family providers (API and Vertex both

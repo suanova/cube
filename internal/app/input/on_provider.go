@@ -122,6 +122,17 @@ type ProviderSelector struct {
 	apiKeyProviderIdx int // index into allProviders
 	apiKeyAuthIdx     int // index into that provider's AuthMethods
 
+	// Inline custom provider form (baseURL / apiKey); see on_provider_custom.go
+	customFormActive bool
+	customFormInputs [2]textinput.Model
+	customFormFocus  int
+	customFormErr    string
+
+	// Inline Ollama form (base URL only); see on_provider_ollama.go
+	ollamaFormActive bool
+	ollamaURLInput   textinput.Model
+	ollamaFormErr    string
+
 	// Inline confirm-remove prompt
 	confirmRemoveActive  bool
 	confirmRemoveEnvVar  string

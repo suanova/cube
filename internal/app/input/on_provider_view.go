@@ -95,6 +95,17 @@ func (s *ProviderSelector) renderItemList(sb *strings.Builder) {
 			sb.WriteString("\n")
 		}
 
+		// Inline custom provider form (render below the relevant item)
+		if s.customFormActive && isSelected {
+			sb.WriteString(s.renderCustomForm())
+			sb.WriteString("\n")
+		}
+		// Inline Ollama form (render below the relevant item)
+		if s.ollamaFormActive && isSelected {
+			sb.WriteString(s.renderOllamaForm())
+			sb.WriteString("\n")
+		}
+
 		// Inline confirm-remove prompt (render below the relevant item)
 		if s.confirmRemoveActive && i == s.confirmRemoveItemIdx {
 			sb.WriteString(s.renderConfirmRemove())
@@ -245,11 +256,10 @@ func (s *ProviderSelector) renderModelRow(item providerListItem, isSelected bool
 
 // ── Providers tab rows ──────────────────────────────────────────────────────
 
-// providerNameColumnWidth is the fixed width for provider name alignment.
-// Sized to fit the longest display name ("Z.ai (GLM series)", 17 cols) plus a
-// comfortable gap, so every row's API-key column lines up without crowding —
-// even the longest name keeps ~5 cols of breathing room before its key.
-const providerNameColumnWidth = 22
+// providerNameColumnWidth is the fixed width for provider/auth-method name
+// alignment. It leaves a distinct gap after the longest auth label
+// ("ChatGPT Subscription", 20 cols) before the right-hand connection info.
+const providerNameColumnWidth = 28
 
 func (s *ProviderSelector) renderProviderRow(item providerListItem, isSelected bool, itemIdx int) string {
 	p := item.Provider
@@ -312,6 +322,46 @@ func (s *ProviderSelector) renderAPIKeyInput() string {
 	return "      " + boxStyle.Render(inputView)
 }
 
+// renderCustomForm renders the custom provider's two-field form (baseURL and
+// apiKey) below its provider row, one labeled input per line, with the
+// validation error underneath when present.
+func (s *ProviderSelector) renderCustomForm() string {
+	labels := [customFormFieldCount]string{"Base URL", "API Key"}
+
+	inputBg := kit.AdaptiveColor{Dark: "#1E293B", Light: "#F1F5F9"}
+	boxStyle := lipgloss.NewStyle().
+		Background(inputBg).
+		Padding(0, 1)
+
+	lines := make([]string, 0, customFormFieldCount+1)
+	for i, input := range s.customFormInputs {
+		label := kit.DimStyle().Render(fmt.Sprintf("%-9s", labels[i]+":"))
+		lines = append(lines, "      "+boxStyle.Render(label+input.View()))
+	}
+	if s.customFormErr != "" {
+		errStyle := lipgloss.NewStyle().Foreground(kit.CurrentTheme.Error)
+		lines = append(lines, "      "+errStyle.Render(s.customFormErr))
+	}
+	return strings.Join(lines, "\n")
+}
+
+// renderOllamaForm renders the Ollama provider's single-field form (base URL)
+// below its provider row, with the validation error underneath when present.
+func (s *ProviderSelector) renderOllamaForm() string {
+	inputBg := kit.AdaptiveColor{Dark: "#1E293B", Light: "#F1F5F9"}
+	boxStyle := lipgloss.NewStyle().
+		Background(inputBg).
+		Padding(0, 1)
+
+	label := kit.DimStyle().Render("Base URL: ")
+	line := "      " + boxStyle.Render(label+s.ollamaURLInput.View())
+	if s.ollamaFormErr != "" {
+		errStyle := lipgloss.NewStyle().Foreground(kit.CurrentTheme.Error)
+		line += "\n" + "      " + errStyle.Render(s.ollamaFormErr)
+	}
+	return line
+}
+
 func (s *ProviderSelector) renderConfirmRemove() string {
 	warnStyle := lipgloss.NewStyle().
 		Foreground(kit.AdaptiveColor{Dark: "#F87171", Light: "#DC2626"})
@@ -329,6 +379,12 @@ func (s *ProviderSelector) renderConfirmRemove() string {
 // ── Footer hints ────────────────────────────────────────────────────────────
 
 func (s *ProviderSelector) renderHints() string {
+	if s.customFormActive {
+		return kit.DimStyle().Render("Tab/↑/↓ switch field · Enter save & connect · Esc cancel")
+	}
+	if s.ollamaFormActive {
+		return kit.DimStyle().Render("Enter save & connect · Esc cancel")
+	}
 	if s.apiKeyActive {
 		return kit.DimStyle().Render("Paste API key · Enter confirm · Esc cancel")
 	}

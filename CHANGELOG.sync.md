@@ -4,6 +4,20 @@
 
 | SHA | Intent | Type | Risk |
 |-----|--------|------|------|
+| `c0d5fb295c74` | Add a configurable OpenAI/Claude-compatible custom LLM provider with inline UI setup, persisted base URL/API-key auth, model listing, and related default-model/URL-normalization fixes. | feature | medium |
+| `fda00fe50635` | Simplify the agent/subagent runtime model by making the general subagent the implicit default and selecting behavior via modes such as default/explore instead of explicit runtime/persona names. | feature | medium |
+| `187a89cc2966` | Clarifies agent runtime selection terminology by renaming internal request/selection resolver APIs and related references without changing behavior. | refactor | low |
+| `37a0c1ed9d2d` | Remove the separate agent/subagent type concept so agents are selected and represented without a type discriminator. | breaking | high |
+| `158df2712b1d` | Align Autopilot suggestion behavior with its settings/UI so suggestions are enabled by default and apply outside Autopilot mode, while preserving full Bash commands in tool rendering. | bugfix | medium |
+| `2e045b6625f6` | Unknown requested agent names are now accepted as display-only labels while falling back to the base agent configuration, with disabled known agents still rejected. | bugfix | medium |
+| `b46072f5c9b2` | Fix MCP client adoption/connection lifecycle handling so retained or transferred clients notify the correct registry and are not dropped on reconfiguration or cwd changes. | bugfix | medium |
+| `ca043bd831fe` | Ensure subagents respect disabled tool filters and reduce unnecessary Agent-tool delegation, while removing a duplicate simplify skill. | bugfix | medium |
+| `f82097e05ee5` | Add first-class Ollama provider support in the provider selector UI, including a dedicated base-URL form instead of API-key editing. | feature | medium |
+| `8e9e115379c7` | Rename the model-selection slash command from /model to /models, remove the stale /glob slash command, and update documentation/version references accordingly. | breaking | high |
+## 2026-07-31 — 10 commits from san#main
+
+| SHA | Intent | Type | Risk |
+|-----|--------|------|------|
 | `4703695a8090` | Simplify TUI tool-call rendering by using generic Read labels and removing extra Bash connector markers in collapsed/long output. | bugfix | low |
 | `d2f28399428f` | Fix TUI rendering of multiline Bash tool calls so physical command lines are visually connected while soft-wrapped lines still align under the prompt. | bugfix | low |
 | `d6a5cbe66bb5` | Simplify internal TUI rendering for nested tool results, including cleaner bash command/result alignment and avoiding connector-only rows for blank command lines. | refactor | low |

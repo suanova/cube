@@ -5,7 +5,10 @@ import (
 	"crypto/rand"
 	"encoding/hex"
 	"fmt"
+	"maps"
+	"slices"
 	"strings"
+	"sync"
 
 	"github.com/genai-io/san/internal/core"
 	"github.com/genai-io/san/internal/core/system"
@@ -30,17 +33,24 @@ type ProviderResolver interface {
 
 // Executor runs agent LLM loops
 type Executor struct {
-	provider            llm.Provider
-	resolver            ProviderResolver // resolves "vendor/model" overrides; nil = same-provider only
-	cwd                 string
-	parentModelID       string // Parent conversation's model ID (used when inheriting)
-	hooks               hook.Handler
-	sessionStore        SubagentSessionStore // Optional: when set, subagent sessions are persisted
-	parentSessionID     string               // Parent session ID for linking subagent sessions
-	projectInstructions string               // project memory (CLAUDE.md/AGENTS.md) for edit-capable subagents
-	skillsPrompt        string               // available skills section for capable subagents
-	mcpTools            mcp.Tools            // tool schemas + execution
-	mcpServers          mcp.Servers          // connect/disconnect for per-subagent server sets
+	provider                   llm.Provider
+	registry                   *Registry
+	resolver                   ProviderResolver // resolves "vendor/model" overrides; nil = same-provider only
+	modelStore                 *llm.Store       // optional cached provider catalog for validating same-provider overrides
+	parentProviderName         llm.Name         // canonical provider key for the parent connection
+	parentAuthMethod           llm.AuthMethod   // auth-specific catalog key for the parent connection
+	cwd                        string
+	parentModelID              string // Parent conversation's model ID (used when inheriting)
+	parentPermissionModeGetter func() PermissionMode
+	hooks                      hook.Handler
+	sessionStore               SubagentSessionStore // Optional: when set, subagent sessions are persisted
+	parentSessionID            string               // Parent session ID for linking subagent sessions
+	projectInstructions        string               // project memory (CLAUDE.md/AGENTS.md) for edit-capable subagents
+	skillsPrompt               string               // available skills section for capable subagents
+	mcpTools                   mcp.Tools            // tool schemas + execution
+	mcpServers                 mcp.Servers          // connect/disconnect for per-subagent server sets
+	disabledToolsMu            sync.RWMutex
+	disabledTools              map[string]bool // effective global disabled tools, copied on set/read
 }
 
 type SubagentSessionStore interface {
@@ -57,15 +67,50 @@ type runConfig struct {
 	permMode    PermissionMode
 }
 
+// PermissionModeFromOperationMode preserves the parent session's effective
+// policy for mode="default" without exposing privileged spellings in the tool
+// schema.
+func PermissionModeFromOperationMode(mode setting.OperationMode) PermissionMode {
+	switch mode {
+	case setting.ModeAutoAccept, setting.ModeAutoPilot:
+		return PermissionAcceptEdits
+	case setting.ModeBypassPermissions:
+		return PermissionBypass
+	case setting.ModeDontAsk:
+		return PermissionDontAsk
+	case setting.ModeReadOnly:
+		return PermissionExplore
+	default:
+		return PermissionDefault
+	}
+}
+
 // NewExecutor creates a new agent executor. parentModelID is used for model
 // inheritance; hookEngine, when non-nil, fires subagent lifecycle hooks.
+// Headless callers inherit the safe default permission policy unless they set a
+// parent permission mode getter.
 func NewExecutor(llmProvider llm.Provider, cwd string, parentModelID string, hookEngine hook.Handler) *Executor {
 	return &Executor{
 		provider:      llmProvider,
+		registry:      Default(),
 		cwd:           cwd,
 		parentModelID: parentModelID,
 		hooks:         hookEngine,
 	}
+}
+
+// SetParentPermissionMode provides the parent session's live permission mode.
+// It is evaluated for every run so mode="default" follows mode changes made
+// after the executor was configured, including entering bypass mode.
+func (e *Executor) SetParentPermissionMode(getMode func() PermissionMode) {
+	e.parentPermissionModeGetter = getMode
+}
+
+func (e *Executor) currentParentPermissionMode() PermissionMode {
+	if e.parentPermissionModeGetter == nil {
+		return PermissionDefault
+	}
+	return NormalizePermissionMode(string(e.parentPermissionModeGetter()))
 }
 
 // SetProjectInstructions provides the project's instruction memory
@@ -83,18 +128,44 @@ func (e *Executor) SetResolver(r ProviderResolver) {
 	e.resolver = r
 }
 
+// SetModelStore supplies the cached catalog and parent connection identity used
+// to reject unsupported same-provider overrides without fetching models on the
+// agent startup path.
+func (e *Executor) SetModelStore(store *llm.Store, provider llm.Name, authMethod llm.AuthMethod) {
+	e.modelStore = store
+	e.parentProviderName = provider
+	e.parentAuthMethod = authMethod
+}
+
 // SetSkillsDirectory provides the skills directory section so subagents
 // with the Skill tool can see and invoke available skills.
 func (e *Executor) SetSkillsDirectory(skillsPrompt string) {
 	e.skillsPrompt = skillsPrompt
 }
 
-// SetMCP wires the parent's MCP access for the subagent. Tool schemas
-// and execution flow through tools; connection lifecycle for any
-// per-subagent server set flows through servers.
-func (e *Executor) SetMCP(tools mcp.Tools, servers mcp.Servers) {
+// SetMCPDependencies wires MCP tool access and the per-Agent connection lease
+// registry. The registry is a concrete *mcp.Registry rather than the mcp.Servers
+// interface because lease operations (acquireConnectionLease/releaseConnectionLease)
+// are unexported lifecycle details not exposed on Servers — adding them would
+// leak internal ownership semantics to every Servers consumer.
+func (e *Executor) SetMCPDependencies(tools mcp.Tools, connectionRegistry *mcp.Registry) {
 	e.mcpTools = tools
-	e.mcpServers = servers
+	e.mcpServers = connectionRegistry
+}
+
+// SetDisabledTools supplies the effective global disabled-tool policy inherited
+// by subsequently built subagents. The map is copied so settings reloads and
+// concurrent runs cannot mutate a tool set while it is being constructed.
+func (e *Executor) SetDisabledTools(disabled map[string]bool) {
+	e.disabledToolsMu.Lock()
+	e.disabledTools = maps.Clone(disabled)
+	e.disabledToolsMu.Unlock()
+}
+
+func (e *Executor) disabledToolsSnapshot() map[string]bool {
+	e.disabledToolsMu.RLock()
+	defer e.disabledToolsMu.RUnlock()
+	return maps.Clone(e.disabledTools)
 }
 
 // SetSessionStore configures session persistence for subagent conversations.
@@ -147,25 +218,22 @@ func (e *Executor) RunBackground(req tool.AgentExecRequest) (*task.AgentTask, er
 	if err := e.validateRequest(req); err != nil {
 		return nil, err
 	}
-	config, ok := defaultRegistry.Get(req.Agent)
+	config, ok := e.resolveRequestAgentConfig(req)
 	if !ok {
-		return nil, fmt.Errorf("unknown agent type: %s", req.Agent)
-	}
-	if !defaultRegistry.IsEnabled(req.Agent) {
-		return nil, fmt.Errorf("agent type is disabled: %s", req.Agent)
+		return nil, fmt.Errorf("unknown or disabled agent: %s", req.Agent)
 	}
 
+	identity := config.Name
 	ctx, cancel := context.WithCancel(context.Background())
-	displayName := displayNameFor(config, req)
 
 	agentTask := task.NewAgentTask(
 		generateShortID(),
-		displayName,
+		identity,
 		req.Description,
 		ctx,
 		cancel,
 	)
-	agentTask.SetIdentity(req.Agent, "")
+	agentTask.SetIdentity(identity, "")
 
 	task.Default().RegisterTask(agentTask)
 
@@ -187,7 +255,7 @@ func (e *Executor) RunBackground(req tool.AgentExecRequest) (*task.AgentTask, er
 				if result.Content != "" {
 					agentTask.AppendOutput([]byte(result.Content + "\n"))
 				}
-				agentTask.SetIdentity(req.Agent, result.AgentID)
+				agentTask.SetIdentity(identity, result.AgentID)
 				agentTask.UpdateProgress(result.StepCount, result.TokenUsage.InputTokens+result.TokenUsage.OutputTokens)
 			}
 			agentTask.AppendOutput([]byte(fmt.Sprintf("Error: %v\n", err)))
@@ -199,7 +267,7 @@ func (e *Executor) RunBackground(req tool.AgentExecRequest) (*task.AgentTask, er
 			agentTask.AppendOutput([]byte(result.Content))
 		}
 
-		agentTask.SetIdentity(req.Agent, result.AgentID)
+		agentTask.SetIdentity(identity, result.AgentID)
 		agentTask.SetOutputFile(result.TranscriptPath)
 		agentTask.UpdateProgress(result.StepCount, result.TokenUsage.InputTokens+result.TokenUsage.OutputTokens)
 
@@ -217,28 +285,82 @@ func (e *Executor) validateRequest(req tool.AgentExecRequest) error {
 	if strings.TrimSpace(req.Prompt) == "" {
 		return fmt.Errorf("agent prompt cannot be empty")
 	}
-	return nil
+	switch strings.TrimSpace(req.Mode) {
+	case "", "default", "explore", "edit":
+		return nil
+	default:
+		return fmt.Errorf("invalid agent mode %q: must be explore, edit, or default", req.Mode)
+	}
+}
+
+func baseAgentConfig() *AgentConfig {
+	return &AgentConfig{
+		Description:    baseAgentDescription,
+		Model:          "inherit",
+		PermissionMode: PermissionDefault,
+		MaxSteps:       defaultMaxSteps,
+	}
+}
+
+// resolveAgentConfig returns the base configuration for an omitted or unknown
+// name. A matching enabled definition overrides the base configuration; a
+// matching disabled definition is rejected instead of silently bypassed.
+func resolveAgentConfig(name string) (*AgentConfig, bool) {
+	return resolveAgentConfigFrom(Default(), name)
+}
+
+func resolveAgentConfigFrom(registry *Registry, name string) (*AgentConfig, bool) {
+	name = strings.TrimSpace(name)
+	if name == "" {
+		return baseAgentConfig(), true
+	}
+	if registry == nil {
+		return displayOnlyAgentConfig(name), true
+	}
+	if config, exists, enabled := registry.LookupAgent(name); exists {
+		return config, enabled
+	}
+	return displayOnlyAgentConfig(name), true
+}
+
+// displayOnlyAgentConfig preserves an unknown requested name for identity and
+// UI display while otherwise using the base agent template. In particular it
+// has no custom prompt, skills, tool rules, model override, or mode override.
+func displayOnlyAgentConfig(name string) *AgentConfig {
+	config := baseAgentConfig()
+	config.Name = strings.TrimSpace(name)
+	config.displayOnly = true
+	return config
+}
+
+func (e *Executor) resolveAgentConfig(name string) (*AgentConfig, bool) {
+	return resolveAgentConfigFrom(e.registry, name)
+}
+
+func (e *Executor) resolveRequestAgentConfig(req tool.AgentExecRequest) (*AgentConfig, bool) {
+	if req.ResolvedAgentConfig != nil {
+		config, ok := req.ResolvedAgentConfig.(*AgentConfig)
+		return config, ok && config != nil
+	}
+	return e.resolveAgentConfig(req.Agent)
 }
 
 func (e *Executor) prepareRunConfig(ctx context.Context, req tool.AgentExecRequest) (*runConfig, error) {
-	config, ok := defaultRegistry.Get(req.Agent)
+	config, ok := e.resolveRequestAgentConfig(req)
 	if !ok {
-		return nil, fmt.Errorf("unknown agent type: %s", req.Agent)
-	}
-	if !defaultRegistry.IsEnabled(req.Agent) {
-		return nil, fmt.Errorf("agent type is disabled: %s", req.Agent)
+		return nil, fmt.Errorf("unknown or disabled agent: %s", req.Agent)
 	}
 
-	displayName := displayNameFor(config, req)
+	displayName := e.displayNameFor(config, req)
 
-	permMode := requestPermissionMode(config, req)
+	permMode := e.requestPermissionMode(config, req)
 
-	maxSteps := config.MaxSteps
+	maxSteps := defaultMaxSteps
+	if config.MaxSteps > maxSteps {
+		maxSteps = config.MaxSteps
+	}
 	if req.MaxSteps > maxSteps {
 		maxSteps = req.MaxSteps
-	}
-	if maxSteps <= 0 {
-		maxSteps = defaultMaxSteps
 	}
 
 	provider, modelID, err := e.resolveModel(ctx, req.Model, config.Model)
@@ -262,7 +384,7 @@ func (e *Executor) fireSubagentStart(req tool.AgentExecRequest, agentHookID stri
 		return
 	}
 	e.hooks.ExecuteAsync(hook.SubagentStart, hook.HookInput{
-		AgentType:   req.Agent,
+		AgentName:   strings.TrimSpace(req.Agent),
 		AgentID:     agentHookID,
 		Description: req.Description,
 	})
@@ -297,7 +419,7 @@ func (e *Executor) buildAgent(ctx context.Context, run *preparedRun, onToolExec 
 	if e.mcpTools != nil {
 		mcpGetter = e.mcpTools.GetToolSchemas
 	}
-	toolSet := newAgentToolSet(rc.config.AllowTools.Names(), rc.config.DenyTools.BareNames(), mcpGetter)
+	toolSet := newAgentToolSet(rc.config.AllowTools.Names(), rc.config.DenyTools.BareNames(), e.disabledToolsSnapshot(), mcpGetter)
 	schemas := filterSchemasForPermission(toolSet.Tools(), rc.permMode, rc.config.AllowTools)
 	var ag core.Agent
 	adaptOpts := []tool.AdaptOption{tool.WithMessagesGetterProvider(func() []core.Message {
@@ -335,7 +457,6 @@ func (e *Executor) buildAgent(ctx context.Context, run *preparedRun, onToolExec 
 		LLM:         llmClient,
 		System:      sys,
 		Tools:       coreTools,
-		AgentType:   rc.config.Name,
 		CompactFunc: subagentCompactFunc(llmClient),
 		CWD:         agentCwd,
 		MaxSteps:    rc.maxSteps,
@@ -437,7 +558,7 @@ func (e *Executor) fireSubagentStop(req tool.AgentExecRequest, agentHookID, agen
 	}
 
 	e.hooks.ExecuteAsync(hook.SubagentStop, hook.HookInput{
-		AgentType:            req.Agent,
+		AgentName:            strings.TrimSpace(req.Agent),
 		AgentID:              agentHookID,
 		AgentTranscriptPath:  agentTranscriptPath,
 		LastAssistantMessage: resultContent,
@@ -466,13 +587,42 @@ func (e *Executor) resolveModel(ctx context.Context, requestModel, configModel s
 		if e.resolver == nil {
 			return e.provider, e.parentModelID, nil
 		}
+		if vendor == e.parentProviderName && modelID != e.parentModelID && !e.cachedCatalogAllowsModel(modelID) {
+			return e.provider, e.parentModelID, nil
+		}
 		p, err := e.resolver.Resolve(ctx, vendor)
 		if err != nil || p == nil {
 			return e.provider, e.parentModelID, nil
 		}
 		return p, modelID, nil
 	}
-	return e.provider, resolveModelAlias(ref), nil
+	// A bare id or alias stays on the parent provider. If the cached catalog
+	// positively reports that provider does not offer the model, inherit instead
+	// of sending a request that may fail with an opaque 400 response.
+	modelID := resolveModelAlias(ref)
+	if modelID != e.parentModelID && !e.cachedCatalogAllowsModel(modelID) {
+		return e.provider, e.parentModelID, nil
+	}
+	return e.provider, modelID, nil
+}
+
+// cachedCatalogAllowsModel rejects only a definitive cached miss. A missing
+// store, parent connection identity, or catalog leaves the override unverified
+// and therefore allowed.
+func (e *Executor) cachedCatalogAllowsModel(modelID string) bool {
+	if e.modelStore == nil || e.parentProviderName == "" || modelID == "" {
+		return true
+	}
+	models, ok := e.modelStore.GetCachedModels(e.parentProviderName, e.parentAuthMethod)
+	if !ok {
+		return true
+	}
+	for _, model := range models {
+		if model.ID == modelID {
+			return true
+		}
+	}
+	return false
 }
 
 func shouldRetryWithParentModel(err error, modelID, parentModelID string) bool {
@@ -531,6 +681,7 @@ func (e *Executor) skillsDirectoryFor(config *AgentConfig) string {
 // not gated here: the Agent tool is parent-only, so workers never see it — the
 // agent model is flat.
 func subagentPermissionFunc(mode PermissionMode, allowRules, denyRules ToolList) perm.PermissionFunc {
+	mode = NormalizePermissionMode(string(mode))
 	opMode := operationMode(mode)
 	display := displayPermissionMode(mode)
 
@@ -561,6 +712,20 @@ func subagentPermissionFunc(mode PermissionMode, allowRules, denyRules ToolList)
 		// hallucinated tracker or cron call.
 		if tool.IsParentOnlyTool(name) {
 			return false, fmt.Sprintf("tool %s is reserved for the main conversation", name)
+		}
+		// Explore is an authoritative read-only boundary. Explicit allow rules
+		// may narrow its tools but cannot elevate it to workspace mutation.
+		if mode == PermissionExplore {
+			switch {
+			case perm.IsSafeTool(name), name == tool.ToolSendMessage, name == tool.ToolSkill:
+				return true, ""
+			case name == tool.ToolBash:
+				command, _ := input["command"].(string)
+				if setting.IsReadOnlyBashCommand(command) {
+					return true, ""
+				}
+			}
+			return false, fmt.Sprintf("tool %s is denied in %s mode", name, display)
 		}
 		// Communication carve-out (see doc comment): a mode-gated worker may
 		// always reach main or a peer via SendMessage. A worker with an explicit
@@ -614,7 +779,7 @@ func filterSchemasForPermission(schemas []core.ToolSchema, mode PermissionMode, 
 	filtered := make([]core.ToolSchema, 0, len(schemas))
 	for _, schema := range schemas {
 		if whitelist {
-			if allowTools.HasName(schema.Name) {
+			if allowTools.HasName(schema.Name) && (mode != PermissionExplore || modeAllowsSchema(mode, schema.Name)) {
 				filtered = append(filtered, schema)
 			}
 			continue
@@ -649,9 +814,13 @@ func modeAllowsSchema(mode PermissionMode, name string) bool {
 	return name == "Bash" || name == tool.ToolSkill
 }
 
-// newAgentToolSet creates a tool.Set for subagents with the disallow set eagerly initialized.
-func newAgentToolSet(allow, disallow []string, mcpGetter func() []core.ToolSchema) *tool.Set {
-	s := &tool.Set{Allow: allow, Disallow: disallow, MCP: mcpGetter, IsAgent: true}
+// newAgentToolSet creates a tool.Set for subagents with global and per-agent
+// exclusions eagerly initialized.
+func newAgentToolSet(allow, disallow []string, disabled map[string]bool, mcpGetter func() []core.ToolSchema) *tool.Set {
+	s := &tool.Set{
+		Allow: slices.Clone(allow), Disallow: slices.Clone(disallow), Disabled: maps.Clone(disabled),
+		MCP: mcpGetter, IsAgent: true,
+	}
 	s.InitDisallowSet()
 	return s
 }

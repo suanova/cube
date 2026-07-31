@@ -28,25 +28,20 @@ func (t *AgentTool) SchemaWithAgentDirectory(agentDirectory string) core.ToolSch
 
 // agentSchema builds the Agent tool schema with the given agent-directory body
 // embedded directly in the description. The directory is rendered before the
-// usage notes so the LLM sees the available agent types right after the
-// opening line. An empty directory yields a directory-less description that
-// still mentions subagent_type — useful for subagent contexts where the
-// directory is intentionally omitted to discourage recursive spawning.
+// usage notes so the LLM sees the available agent names right after the
+// opening line.
 func agentSchema(agentDirectory string) core.ToolSchema {
 	agentDirectory = strings.TrimSpace(agentDirectory)
 
 	var sb strings.Builder
-	sb.WriteString("Launch a subagent for complex work that benefits from separate context or parallel execution.\n\n")
+	sb.WriteString("Launch a subagent only when separate context or parallel execution materially helps. Handle clear, bounded work directly, even when it requires multiple tool calls.\n\n")
 	if agentDirectory != "" {
+		sb.WriteString("Available agent definitions:\n\n")
 		sb.WriteString(agentDirectory)
 		sb.WriteString("\n\n")
 	}
-	sb.WriteString("When using the Agent tool, specify a subagent_type parameter to select which agent type to use. If omitted, the general-purpose agent is used.\n\n")
-	sb.WriteString("Use the lightest option that fits: a single Bash or Read call → that tool directly; 3+ non-mutating searches with decisions between them → mode=explore; code changes or multi-file edits → mode=edit.\n\n")
-	sb.WriteString("Brief the agent like a colleague who just walked in — it has not seen this conversation. Write a self-contained prompt: the goal and why, what you've ruled out, relevant paths and constraints; for lookups the exact command, for investigations the question. Never delegate understanding: \"based on your findings, fix the bug\" pushes synthesis onto the agent.\n\n")
-	sb.WriteString("Notes:\n")
-	sb.WriteString("- Launch independent agents concurrently — multiple Agent calls in one message. Run foreground when you need the result to continue; run_in_background only for genuinely independent work (you are notified on completion).\n")
-	sb.WriteString("- A result summary is what the agent meant to do, not what it did — verify the actual changes before reporting work done, and summarize results back to the user yourself.")
+	sb.WriteString("Brief the agent with all context it needs: the goal, relevant paths, constraints, and what is already known. Use explore for read-only investigation and edit for file changes.\n\n")
+	sb.WriteString("Launch independent agents concurrently. Use background mode only for work that does not block your next step. Verify the result before reporting it.")
 
 	return core.ToolSchema{
 		Name:        "Agent",
@@ -66,29 +61,21 @@ var agentToolParameters = map[string]any{
 			"type":        "string",
 			"description": "A short (3-5 word) description of the task",
 		},
-		"subagent_type": map[string]any{
-			"type":        "string",
-			"description": "The type of specialized agent to use for this task",
-		},
 		"name": map[string]any{
 			"type":        "string",
-			"description": "Optional short display name, usually 1-2 words. If omitted, explore mode uses Explorer and edit mode uses Editor.",
+			"description": "Choose an available agent, or name a new general-purpose agent for this task. New names are for display only.",
 		},
 		"run_in_background": map[string]any{
 			"type":        "boolean",
 			"description": "Set to true to run this agent in the background. You will be notified when it completes.",
 		},
-		"model": map[string]any{
-			"type":        "string",
-			"description": "Optional model override. If omitted or unavailable, inherits from parent conversation.",
-		},
 		"max_steps": map[string]any{
 			"type":        "number",
-			"description": "Maximum number of LLM inference steps for the agent. Built-in agents default to 100 and lower values are raised to 100.",
+			"description": "Maximum number of LLM inference steps. Defaults to 500; lower values are raised to 500.",
 		},
 		"mode": map[string]any{
 			"type":        "string",
-			"description": "Permission mode for spawned agent: explore = read-only, edit = can modify files, default = agent config's mode.",
+			"description": "Permission mode for the spawned agent: explore = read-only; edit = can modify files; default = use the named definition's configured mode, or inherit the parent session when name is empty.",
 			"enum":        []string{"explore", "edit", "default"},
 		},
 	},

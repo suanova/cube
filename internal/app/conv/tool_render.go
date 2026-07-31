@@ -963,37 +963,20 @@ func conciseAgentDescription(desc string) string {
 	return kit.TruncateText(desc, 60)
 }
 
-func displayAgentName(agentType, mode string) string {
-	if isGenericAgentName(agentType) {
+func displayAgentName(agentName, mode string) string {
+	if strings.TrimSpace(agentName) == "" {
 		switch strings.ToLower(strings.TrimSpace(mode)) {
 		case "explore":
 			return "Explorer"
 		case "edit":
 			return "Editor"
 		}
-		switch strings.ToLower(strings.TrimSpace(agentType)) {
-		case "explore", "explorer":
-			return "Explorer"
-		case "edit", "editor":
-			return "Editor"
-		default:
-			return "General"
-		}
+		return "General"
 	}
-	return shortAgentName(agentType)
-}
-
-func isGenericAgentName(name string) bool {
-	switch strings.ToLower(strings.TrimSpace(name)) {
-	case "", "agent", "general", "general-purpose", "explore", "explorer", "edit", "editor":
-		return true
-	default:
-		return false
-	}
+	return shortAgentName(agentName)
 }
 
 type agentInput struct {
-	Type        string `json:"subagent_type"`
 	Name        string `json:"name"`
 	Description string `json:"description"`
 	Prompt      string `json:"prompt"`
@@ -1008,11 +991,8 @@ func parseAgentInput(input string) agentInput {
 		return agentInput{}
 	}
 	agent.Valid = true
-	if agent.Type == "" {
-		agent.Type = "general-purpose"
-	}
 	if agent.Name == "" {
-		agent.Name = displayAgentName(agent.Type, agent.Mode)
+		agent.Name = displayAgentName("", agent.Mode)
 	}
 	return agent
 }
@@ -1165,45 +1145,57 @@ func renderToolLineWithIcon(label string, width int, iconText string) string {
 	return lipgloss.JoinHorizontal(lipgloss.Top, icon, toolCallStyle.Render(truncateToolLabel(label, width)))
 }
 
-// renderBashToolCall renders a Bash tool call so its command is always readable.
-// A non-empty single-line command uses a normal Bash(command) preview with its
-// optional description dimmed. Multi-line commands retain the full command
-// block: a dimmed block below a "● Bash" header, led by a shell "$" prompt.
-// Command lines soft-wrap to the width rather than truncate, so multi-line
-// commands are always visible in full.
+// renderBashToolCall renders a Bash tool call without ever truncating its
+// command. A single-line command stays in Bash(command) form only when that
+// complete label fits; its optional description may be shortened to keep the
+// row within the terminal. Commands that contain a newline or do not fit become
+// a full command block below the Bash header and soft-wrap without ellipses.
 func renderBashToolCall(input string, width int, icon, detail string) string {
 	command, description := extractBashCommand(input)
+	description = strings.Join(strings.Fields(description), " ")
+	labelWidth := max(3, bashPreviewLabelWidth(width)-lipgloss.Width(detail))
+
 	if strings.TrimSpace(command) != "" && !strings.Contains(command, "\n") {
-		label := toolCallStyle.Render(fmt.Sprintf("%s(%s)", tool.ToolBash, command))
-		if description = strings.Join(strings.Fields(description), " "); description != "" {
-			label += toolResultStyle.Render(" - " + description)
+		commandLabel := fmt.Sprintf("%s(%s)", tool.ToolBash, command)
+		if lipgloss.Width(commandLabel) <= labelWidth {
+			label := toolCallStyle.Render(commandLabel)
+			if description != "" {
+				descriptionWidth := labelWidth - lipgloss.Width(commandLabel)
+				if descriptionWidth > 0 {
+					label += xansi.Truncate(toolResultStyle.Render(" - "+description), descriptionWidth, "...")
+				}
+			}
+			iconCell := toolCallStyle.Width(2).Render(icon)
+			return lipgloss.JoinHorizontal(lipgloss.Top, iconCell, label) + detail + "\n"
 		}
-		labelWidth := max(3, bashPreviewLabelWidth(width)-lipgloss.Width(detail))
-		label = xansi.Truncate(label, labelWidth, "...")
-		iconCell := toolCallStyle.Width(2).Render(icon)
-		return lipgloss.JoinHorizontal(lipgloss.Top, iconCell, label) + detail + "\n"
 	}
 	if strings.TrimSpace(command) == "" {
 		command = "(no command)"
 	}
 
-	budget := maxToolLabelWidth(width)
-
 	var sb strings.Builder
 
-	// Header line: ● Bash - description. The description may be shortened
-	// (it's metadata); the command below never is.
-	header := tool.ToolBash
+	// Header line: ● Bash - description · running detail. Only the description
+	// may be shortened; the command is rendered separately below.
+	header := toolCallStyle.Render(tool.ToolBash)
 	if description != "" {
-		header += " - " + description
+		descriptionWidth := labelWidth - lipgloss.Width(tool.ToolBash)
+		if descriptionWidth > 0 {
+			header += xansi.Truncate(toolResultStyle.Render(" - "+description), descriptionWidth, "...")
+		}
 	}
-	sb.WriteString(renderToolLineWithIcon(header, width, icon) + detail + "\n")
+	iconCell := toolCallStyle.Width(2).Render(icon)
+	sb.WriteString(lipgloss.JoinHorizontal(lipgloss.Top, iconCell, header) + detail + "\n")
 
-	// Soft-wrap every command line to the available width. The first row carries
+	// Soft-wrap every command line to the terminal width. The first row carries
 	// the shell prompt; every later row uses the connector so the command and its
-	// result form one continuous block.
+	// result form one continuous block. No command text is replaced by ellipses.
+	budget := width
+	if budget <= 0 {
+		budget = 80
+	}
 	promptWidth := lipgloss.Width(bashPrompt)
-	wrapWidth := budget - promptWidth
+	wrapWidth := max(1, budget-promptWidth)
 	seenCommand := false
 	for commandLine := range strings.SplitSeq(command, "\n") {
 		// Preserve intentional blank lines after the command starts while keeping
@@ -1285,14 +1277,14 @@ func agentColor(color string) kit.AdaptiveColor {
 	}
 }
 
-// configuredAgentColor returns the color set for this agent's type in its
-// subagent config (a name like "blue" or a "#rrggbb" hex), or "" when none is
+// configuredAgentColor returns the color set for this agent's name in its
+// configuration (a name like "blue" or a "#rrggbb" hex), or "" when none is
 // set. It is later resolved to a theme color by agentColor.
 func configuredAgentColor(agent agentInput, colors map[string]string) string {
 	if len(colors) == 0 {
 		return ""
 	}
-	return colors[strings.ToLower(agent.Type)]
+	return colors[strings.ToLower(agent.Name)]
 }
 
 // agentBlinkTicks is the number of spinner ticks per ● / ○ swap.

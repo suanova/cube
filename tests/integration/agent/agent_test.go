@@ -33,7 +33,6 @@ func TestAgent_GeneralExploreMode(t *testing.T) {
 
 	executor := subagent.NewExecutor(mp, t.TempDir(), "fake-model", nil)
 	result, err := executor.Run(context.Background(), tool.AgentExecRequest{
-		Agent:       "general-purpose",
 		Mode:        "explore",
 		Prompt:      "Find all Go files",
 		Description: "explore codebase",
@@ -45,30 +44,37 @@ func TestAgent_GeneralExploreMode(t *testing.T) {
 	if !result.Success {
 		t.Errorf("expected success, got error: %s", result.Error)
 	}
-	if result.AgentName != "Explorer" {
-		t.Errorf("expected agent name 'Explorer', got %q", result.AgentName)
+	if result.AgentName != "" {
+		t.Errorf("expected unnamed agent, got %q", result.AgentName)
 	}
 	if result.Content != "Explored the codebase" {
 		t.Errorf("unexpected content: %q", result.Content)
 	}
 }
 
-func TestAgent_UnknownAgent(t *testing.T) {
-	mp := &testutil.MockProvider{}
+func TestAgent_UnknownNameUsesDefaultTemplate(t *testing.T) {
+	mp := &testutil.MockProvider{
+		Responses: []llm.CompletionResponse{
+			{Content: "completed with default template", StopReason: "end_turn"},
+		},
+	}
 	executor := subagent.NewExecutor(mp, t.TempDir(), "fake-model", nil)
 
-	_, err := executor.Run(context.Background(), tool.AgentExecRequest{
+	result, err := executor.Run(context.Background(), tool.AgentExecRequest{
 		Agent:  "NonExistent",
 		Prompt: "do something",
 	})
-	if err == nil {
-		t.Fatal("expected error for unknown agent")
+	if err != nil {
+		t.Fatalf("unknown display name should use the default template: %v", err)
+	}
+	if !result.Success || result.AgentName != "NonExistent" {
+		t.Fatalf("unexpected result: %#v", result)
 	}
 }
 
 func TestAgent_MaxStepsRespected(t *testing.T) {
-	// LLM always returns tool calls to force hitting max steps
-	responses := make([]llm.CompletionResponse, 105)
+	// LLM always returns tool calls to force hitting max steps.
+	responses := make([]llm.CompletionResponse, 505)
 	for i := range responses {
 		responses[i] = llm.CompletionResponse{
 			StopReason: "tool_use",
@@ -82,7 +88,6 @@ func TestAgent_MaxStepsRespected(t *testing.T) {
 		t.TempDir(), "fake-model", nil,
 	)
 	result, err := executor.Run(context.Background(), tool.AgentExecRequest{
-		Agent:  "general-purpose",
 		Prompt: "keep going",
 	})
 	if err != nil {
@@ -92,8 +97,8 @@ func TestAgent_MaxStepsRespected(t *testing.T) {
 	if result.Success {
 		t.Error("expected failure (max steps)")
 	}
-	if !strings.Contains(result.Error, "100") {
-		t.Errorf("expected error message about 100 max steps, got %q", result.Error)
+	if !strings.Contains(result.Error, "500") {
+		t.Errorf("expected error message about 500 max steps, got %q", result.Error)
 	}
 }
 
@@ -123,7 +128,6 @@ func TestAgent_ModelResolution(t *testing.T) {
 			}
 
 			_, err := executor.Run(context.Background(), tool.AgentExecRequest{
-				Agent:  "general-purpose",
 				Prompt: "test",
 				Model:  tt.reqModel,
 			})
@@ -186,7 +190,6 @@ func TestAgent_ExploreMode_BlocksWrites(t *testing.T) {
 
 	executor := subagent.NewExecutor(mp, t.TempDir(), "fake-model", nil)
 	result, err := executor.Run(context.Background(), tool.AgentExecRequest{
-		Agent:  "general-purpose",
 		Mode:   "explore",
 		Prompt: "try to write a file",
 	})
@@ -249,7 +252,6 @@ func TestAgent_SubagentHooks_Fire(t *testing.T) {
 
 	executor := subagent.NewExecutor(mp, tmpDir, "fake-model", engine)
 	_, err := executor.Run(context.Background(), tool.AgentExecRequest{
-		Agent:  "general-purpose",
 		Prompt: "test hooks",
 	})
 	if err != nil {
@@ -289,7 +291,6 @@ func TestAgent_BackgroundExecution(t *testing.T) {
 
 	executor := subagent.NewExecutor(mp, t.TempDir(), "fake-model", nil)
 	agentTask, err := executor.RunBackground(tool.AgentExecRequest{
-		Agent:       "general-purpose",
 		Prompt:      "background task",
 		Description: "bg test",
 	})
@@ -340,7 +341,6 @@ func TestAgent_OnActivityReceivesToolUpdates(t *testing.T) {
 	executor := subagent.NewExecutor(mp, tmpDir, "fake-model", nil)
 	var activity []string
 	result, err := executor.Run(context.Background(), tool.AgentExecRequest{
-		Agent:  "general-purpose",
 		Mode:   "explore",
 		Prompt: "inspect the readme",
 		OnActivity: func(msg string) {
@@ -357,7 +357,7 @@ func TestAgent_OnActivityReceivesToolUpdates(t *testing.T) {
 	// The UI stream carries everything: telemetry and the tool trace.
 	for _, want := range []string{
 		"Model: fake-model",
-		"Mode: Explore · max 100 steps",
+		"Mode: Explore · max 500 steps",
 		"Thinking...",
 		"Read(README.md)",
 		"Usage: input=30 output=8",

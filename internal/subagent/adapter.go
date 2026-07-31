@@ -2,6 +2,7 @@ package subagent
 
 import (
 	"context"
+	"strings"
 
 	"github.com/genai-io/san/internal/tool"
 )
@@ -61,24 +62,29 @@ func (a *ExecutorAdapter) RunBackground(req tool.AgentExecRequest) (tool.AgentTa
 	}, nil
 }
 
+// ResolveAgentSelection returns the display projection and exact configuration
+// selected for a request so permission preparation can bind execution to it.
+func (a *ExecutorAdapter) ResolveAgentSelection(name string) (tool.AgentConfigInfo, any, bool) {
+	config, ok := a.Executor.resolveAgentConfig(name)
+	if !ok {
+		return tool.AgentConfigInfo{}, nil, false
+	}
+	info := ToAgentConfigInfo(config)
+	if strings.TrimSpace(name) == "" || config.displayOnly {
+		info.PermissionMode = string(a.Executor.currentParentPermissionMode())
+	}
+	return info, config, true
+}
+
 // GetParentModelID returns the parent conversation's model ID
 func (a *ExecutorAdapter) GetParentModelID() string {
 	return a.Executor.GetParentModelID()
 }
 
-// GetAgentConfig returns configuration for an agent type
-// Returns false if agent is not found or is disabled
-func (a *ExecutorAdapter) GetAgentConfig(agentType string) (tool.AgentConfigInfo, bool) {
-	if !defaultRegistry.IsEnabled(agentType) {
-		return tool.AgentConfigInfo{}, false
-	}
-
-	config, ok := defaultRegistry.Get(agentType)
-	if !ok {
-		return tool.AgentConfigInfo{}, false
-	}
-
-	return ToAgentConfigInfo(config), true
+// GetAgentConfig returns configuration for an optional agent name.
+func (a *ExecutorAdapter) GetAgentConfig(name string) (tool.AgentConfigInfo, bool) {
+	info, _, ok := a.ResolveAgentSelection(name)
+	return info, ok
 }
 
 // ToAgentConfigInfo projects an agent definition into the display info shared by
