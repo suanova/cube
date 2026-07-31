@@ -28,6 +28,9 @@ var ghostTextStyle = lipgloss.NewStyle().Foreground(kit.CurrentTheme.TextDim)
 // source the key router uses — so the panel that owns the keyboard is always
 // the one drawn on screen.
 func (m *model) View() tea.View {
+	if frame, ok := m.scrollbackFrameForPrint(); ok {
+		return frame
+	}
 	content, cursor := m.viewString()
 	v := tea.NewView(content)
 	v.Cursor = cursor
@@ -178,10 +181,6 @@ func (m model) renderInputView() string {
 // applied by the caller (tailLines).
 func (m model) renderChatSection(activeContent, trackerView string) string {
 	var parts []string
-
-	if pending := m.pendingScrollbackView(); pending != "" {
-		parts = append(parts, pending)
-	}
 
 	if banner := m.liveWelcome(); banner != "" {
 		// Trailing blank line so the splash isn't cramped against the
