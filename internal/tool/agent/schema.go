@@ -34,17 +34,14 @@ func agentSchema(agentDirectory string) core.ToolSchema {
 	agentDirectory = strings.TrimSpace(agentDirectory)
 
 	var sb strings.Builder
-	sb.WriteString("Launch a subagent for complex work that benefits from separate context or parallel execution.\n\n")
+	sb.WriteString("Launch a subagent only when separate context or parallel execution materially helps. Handle clear, bounded work directly, even when it requires multiple tool calls.\n\n")
 	if agentDirectory != "" {
 		sb.WriteString("Available agent definitions:\n\n")
 		sb.WriteString(agentDirectory)
 		sb.WriteString("\n\n")
 	}
-	sb.WriteString("Use the lightest option that fits: a single Bash or Read call → that tool directly; 3+ non-mutating searches with decisions between them → mode=explore; code changes or multi-file edits → mode=edit.\n\n")
-	sb.WriteString("Brief the agent like a colleague who just walked in — it has not seen this conversation. Write a self-contained prompt: the goal and why, what you've ruled out, relevant paths and constraints; for lookups the exact command, for investigations the question. Never delegate understanding: \"based on your findings, fix the bug\" pushes synthesis onto the agent.\n\n")
-	sb.WriteString("Notes:\n")
-	sb.WriteString("- Launch independent agents concurrently — multiple Agent calls in one message. Run foreground when you need the result to continue; run_in_background only for genuinely independent work (you are notified on completion).\n")
-	sb.WriteString("- A result summary is what the agent meant to do, not what it did — verify the actual changes before reporting work done, and summarize results back to the user yourself.")
+	sb.WriteString("Brief the agent with all context it needs: the goal, relevant paths, constraints, and what is already known. Use explore for read-only investigation and edit for file changes.\n\n")
+	sb.WriteString("Launch independent agents concurrently. Use background mode only for work that does not block your next step. Verify the result before reporting it.")
 
 	return core.ToolSchema{
 		Name:        "Agent",

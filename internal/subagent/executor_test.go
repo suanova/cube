@@ -15,6 +15,7 @@ import (
 	"github.com/genai-io/san/internal/setting"
 	"github.com/genai-io/san/internal/skill"
 	"github.com/genai-io/san/internal/tool"
+	_ "github.com/genai-io/san/internal/tool/registry" // registers built-in schemas used by tool.Set.Tools
 )
 
 // llm.ParseVendorModel gates "vendor/model" routing on registered providers, so
@@ -775,6 +776,78 @@ func TestResolveAgentConfigRejectsDisabledDefinition(t *testing.T) {
 	}
 	if _, ok := resolveAgentConfig("reviewer"); ok {
 		t.Fatal("disabled agent should not resolve")
+	}
+}
+
+func TestSubagentToolSetOwnsFilterInputs(t *testing.T) {
+	allow := []string{tool.ToolRead}
+	disallow := []string{tool.ToolSendMessage}
+	disabled := map[string]bool{tool.ToolWrite: true}
+	set := newAgentToolSet(allow, disallow, disabled, nil)
+
+	allow[0] = tool.ToolWrite
+	disallow[0] = tool.ToolRead
+	disabled[tool.ToolWrite] = false
+
+	if len(set.Allow) != 1 || set.Allow[0] != tool.ToolRead {
+		t.Fatalf("tool set retained caller-owned allow slice: %v", set.Allow)
+	}
+	if len(set.Disallow) != 1 || set.Disallow[0] != tool.ToolSendMessage {
+		t.Fatalf("tool set retained caller-owned disallow slice: %v", set.Disallow)
+	}
+	if !set.Disabled[tool.ToolWrite] {
+		t.Fatalf("tool set retained caller-owned disabled map: %v", set.Disabled)
+	}
+}
+
+func TestSubagentToolSetInheritsDisabledTools(t *testing.T) {
+	const disabledName = tool.ToolSendMessage
+
+	disabled := map[string]bool{disabledName: true}
+	set := newAgentToolSet(nil, nil, disabled, nil)
+	// Mutating the caller's map after configuration must not alter the built set.
+	disabled[disabledName] = false
+
+	for _, schema := range set.Tools() {
+		if schema.Name == disabledName {
+			t.Fatalf("disabled %s remained in subagent tool schema", disabledName)
+		}
+	}
+	if executor := tool.AdaptToolRegistry(set.Tools(), func() string { return "" }).Get(disabledName); executor != nil {
+		t.Fatalf("disabled %s retained a subagent executor", disabledName)
+	}
+}
+
+func TestSubagentToolSetKeepsExplicitlyEnabledSendMessage(t *testing.T) {
+	set := newAgentToolSet(nil, nil, map[string]bool{tool.ToolSendMessage: false}, nil)
+	var found bool
+	for _, schema := range set.Tools() {
+		if schema.Name == tool.ToolSendMessage {
+			found = true
+			break
+		}
+	}
+	if !found {
+		t.Fatalf("explicitly enabled %s missing from subagent tool schema", tool.ToolSendMessage)
+	}
+	if executor := tool.AdaptToolRegistry(set.Tools(), func() string { return "" }).Get(tool.ToolSendMessage); executor == nil {
+		t.Fatalf("explicitly enabled %s missing subagent executor", tool.ToolSendMessage)
+	}
+}
+
+func TestExecutorDisabledToolsCopiesInputAndSnapshot(t *testing.T) {
+	executor := &Executor{}
+	disabled := map[string]bool{"Write": true}
+	executor.SetDisabledTools(disabled)
+	disabled["Write"] = false
+
+	snapshot := executor.disabledToolsSnapshot()
+	if !snapshot["Write"] {
+		t.Fatal("SetDisabledTools retained caller-owned map")
+	}
+	snapshot["Write"] = false
+	if !executor.disabledToolsSnapshot()["Write"] {
+		t.Fatal("disabledToolsSnapshot exposed executor-owned map")
 	}
 }
 

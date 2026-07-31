@@ -43,6 +43,34 @@ func TestAgentToolSchemaMatchesEmptyDirectory(t *testing.T) {
 	}
 }
 
+func TestAgentSchemaEncouragesDirectWorkForClearScope(t *testing.T) {
+	description := agentSchema("").Description
+	for _, want := range []string{
+		"separate context or parallel execution materially helps",
+		"Handle clear, bounded work directly",
+		"multiple tool calls",
+	} {
+		if !strings.Contains(description, want) {
+			t.Errorf("Agent description should contain %q", want)
+		}
+	}
+}
+
+func TestAgentSchemaRetainsDelegationGuidance(t *testing.T) {
+	description := agentSchema("").Description
+	for _, want := range []string{
+		"all context it needs",
+		"Use explore for read-only investigation and edit for file changes",
+		"Launch independent agents concurrently",
+		"Use background mode only for work that does not block your next step",
+		"Verify the result before reporting it",
+	} {
+		if !strings.Contains(description, want) {
+			t.Errorf("Agent description should retain %q guidance", want)
+		}
+	}
+}
+
 func TestAgentSchemaExplainsNameResolution(t *testing.T) {
 	properties := agentToolParameters["properties"].(map[string]any)
 	name, ok := properties["name"].(map[string]any)
