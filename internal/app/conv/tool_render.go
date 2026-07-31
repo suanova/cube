@@ -95,16 +95,218 @@ func RenderToolResultInline(data ToolResultData, mdRenderer *MDRenderer) string 
 	}
 
 	switch toolName {
+	case tool.ToolBash:
+		if data.Nested {
+			return renderBashToolResultInline(data)
+		}
+		return renderGenericToolResultInline(data)
 	case tool.ToolSkill:
 		return renderSkillResultInline(data)
 	case tool.ToolAgent, tool.ToolSendMessage:
 		return renderTaskResultInline(data, mdRenderer)
 	case tool.ToolEdit, tool.ToolWrite:
+		if data.Nested {
+			return renderNestedFileChangeResultInline(data)
+		}
 		return renderFileChangeResultInline(data)
+	case tool.ToolRead:
+		if data.Nested {
+			return renderNestedReadResultInline(data)
+		}
+		return renderGenericToolResultInline(data)
 	case tool.ToolAskUserQuestion:
 		return renderAskUserResultInline(data)
 	}
 	return renderGenericToolResultInline(data)
+}
+
+func renderNestedReadResultInline(data ToolResultData) string {
+	if data.IsError {
+		var sb strings.Builder
+		for line := range strings.SplitSeq(strings.TrimPrefix(data.Content, "Error: "), "\n") {
+			sb.WriteString(renderNestedToolBodyLine(line))
+		}
+		sb.WriteString(errorStyle.Render("  └ failed") + "\n")
+		return sb.String()
+	}
+
+	content := strings.TrimSuffix(data.Content, "\n")
+	var sb strings.Builder
+	if data.Expanded && content != "" {
+		for line := range strings.SplitSeq(content, "\n") {
+			sb.WriteString(renderNestedToolBodyLine(line))
+		}
+	}
+	sb.WriteString(toolResultStyle.Render("  └ "+formatReadResultSummary(content)) + "\n")
+	return sb.String()
+}
+
+// renderNestedToolBodyLine keeps body content under the same visual connector
+// that ends at the adjacent terminal summary. The connector only appears for
+// visible content, so collapsed results stay compact.
+func renderNestedToolBodyLine(line string) string {
+	return toolResultStyle.Render("  ┊ "+line) + "\n"
+}
+
+func formatReadResultSummary(content string) string {
+	count := 0
+	for line := range strings.SplitSeq(content, "\n") {
+		prefix, _, ok := strings.Cut(line, "\t")
+		if !ok {
+			continue
+		}
+		if _, err := strconv.Atoi(strings.TrimSpace(prefix)); err == nil {
+			count++
+		}
+	}
+	if count > 0 {
+		return fmt.Sprintf("%d lines", count)
+	}
+	if strings.HasPrefix(content, "file exists but is empty:") {
+		return "empty file"
+	}
+	if strings.HasPrefix(content, "no lines at offset ") {
+		return "no lines"
+	}
+	return "no output"
+}
+
+func renderBashToolResultInline(data ToolResultData) string {
+	content := strings.TrimSuffix(data.Content, "\n")
+	summary := formatLineCount(content)
+	style := toolResultStyle
+	if data.IsError {
+		summary = "failed · " + summary
+		style = errorStyle
+	}
+
+	var sb strings.Builder
+	// Keep Bash's connector visible while its output is collapsed. When output
+	// is visible, its first row carries the connector so no blank row splits the
+	// command from the result block.
+	showBody := (data.Expanded || data.IsError) && content != ""
+	if !showBody {
+		sb.WriteString(toolResultStyle.Render("  ┊") + "\n")
+	}
+	if showBody {
+		for line := range strings.SplitSeq(content, "\n") {
+			sb.WriteString(renderNestedToolBodyLine(line))
+		}
+	}
+	sb.WriteString(style.Render("  └ "+summary) + "\n")
+	return sb.String()
+}
+
+// renderNestedBashBodyLine aligns expanded command output with the shell
+// prompt, connector, and terminal summary in a nested Bash block.
+func renderNestedBashBodyLine(line string) string {
+	return renderNestedToolBodyLine(line)
+}
+
+func renderNestedFileChangeResultInline(data ToolResultData) string {
+	width := data.Width
+	if width <= 0 {
+		width = 80
+	}
+
+	var sb strings.Builder
+	if data.IsError {
+		sb.WriteString(renderFileChangeInputPreview(data.ToolInput, width))
+		for line := range strings.SplitSeq(strings.TrimPrefix(data.Content, "Error: "), "\n") {
+			sb.WriteString(renderNestedToolBodyLine(line))
+		}
+		sb.WriteString(errorStyle.Render("  └ failed") + "\n")
+		return sb.String()
+	}
+
+	if details, ok := data.Details.(toolresult.FileChangeDetails); ok {
+		block, _ := renderStoredFileDiffIndented(details.UnifiedDiff, width, 0, "  ┊ ")
+		sb.WriteString(block)
+		if details.TruncatedDiffLines > 0 {
+			sb.WriteString(truncatedStyle.Render(fmt.Sprintf("  ┊ … diff truncated (%d more lines)", details.TruncatedDiffLines)) + "\n")
+		}
+		sb.WriteString(toolResultStyle.Render("  └ "+fileChangeSummary(details)) + "\n")
+		return sb.String()
+	}
+
+	state, content := nestedFileChangeFallbackState(data)
+	if content != "" {
+		for line := range strings.SplitSeq(content, "\n") {
+			sb.WriteString(toolResultExpandedStyle.Render(line) + "\n")
+		}
+	}
+	sb.WriteString(toolResultStyle.Render("  └ "+state) + "\n")
+	return sb.String()
+}
+
+// renderFileChangeInputPreview shows the requested change when the edit did
+// not apply. It uses tool input rather than diagnostics so the user can compare
+// the intended replacement with the actual-file diagnostic below.
+func renderFileChangeInputPreview(input string, width int) string {
+	var params struct {
+		OldString string `json:"old_string"`
+		NewString string `json:"new_string"`
+		OldText   string `json:"oldText"`
+		NewText   string `json:"newText"`
+		Edits     []struct {
+			OldString string `json:"old_string"`
+			NewString string `json:"new_string"`
+			OldText   string `json:"oldText"`
+			NewText   string `json:"newText"`
+		} `json:"edits"`
+		Content string `json:"content"`
+	}
+	if json.Unmarshal([]byte(input), &params) != nil {
+		return ""
+	}
+	old, new := params.OldString, params.NewString
+	if old == "" && new == "" {
+		old, new = params.OldText, params.NewText
+	}
+	if old == "" && new == "" && len(params.Edits) > 0 {
+		edit := params.Edits[0]
+		old, new = edit.OldString, edit.NewString
+		if old == "" && new == "" {
+			old, new = edit.OldText, edit.NewText
+		}
+	}
+	if new == "" && params.Content != "" {
+		new = params.Content
+	}
+	previewWidth := width - 4
+	if previewWidth <= lipgloss.Width("+ ") {
+		return ""
+	}
+	var sb strings.Builder
+	for _, preview := range []struct{ marker, text string }{{"-", old}, {"+", new}} {
+		if preview.text == "" {
+			continue
+		}
+		for line := range strings.SplitSeq(preview.text, "\n") {
+			for _, segment := range strings.Split(xansi.Wrap(line, previewWidth-lipgloss.Width(preview.marker)-1, " "), "\n") {
+				sb.WriteString(toolResultStyle.Render("  ┊ "+preview.marker+" "+segment) + "\n")
+			}
+		}
+	}
+	return sb.String()
+}
+
+func nestedFileChangeFallbackState(data ToolResultData) (state, content string) {
+	return extractParenContent(data.Content, "completed"), ""
+}
+
+func fileChangeSummary(details toolresult.FileChangeDetails) string {
+	parts := make([]string, 0, 2)
+	if details.AddedLines > 0 {
+		parts = append(parts, fmt.Sprintf("+%d", details.AddedLines))
+	}
+	if details.RemovedLines > 0 {
+		parts = append(parts, fmt.Sprintf("-%d", details.RemovedLines))
+	}
+	if len(parts) == 0 {
+		return "no changes"
+	}
+	return strings.Join(parts, " ")
 }
 
 func renderFileChangeResultInline(data ToolResultData) string {
@@ -119,15 +321,7 @@ func renderFileChangeResultInline(data ToolResultData) string {
 		return renderGenericToolResultInline(data)
 	}
 
-	var summary string
-	switch {
-	case details.IsNewFile:
-		summary = fmt.Sprintf("new file · %d lines", details.AddedLines)
-	case details.EditCount > 0:
-		summary = fmt.Sprintf("%d replacements · +%d -%d", details.EditCount, details.AddedLines, details.RemovedLines)
-	default:
-		summary = fmt.Sprintf("rewrote · +%d -%d", details.AddedLines, details.RemovedLines)
-	}
+	summary := fileChangeSummary(details)
 
 	var sb strings.Builder
 	sb.WriteString(toolResultStyle.Render(fmt.Sprintf("  %s  %s → %s", toolResultIcon(false), data.ToolName, summary)) + "\n")
@@ -773,6 +967,26 @@ func extractToolArgs(input string) string {
 	return ""
 }
 
+// formatReadToolLabel adds a compact requested range only when the caller chose
+// one explicitly; the common full-file Read remains just Read(path).
+func formatReadToolLabel(input, path string) string {
+	var params struct {
+		Offset int `json:"offset"`
+		Limit  int `json:"limit"`
+	}
+	if json.Unmarshal([]byte(input), &params) != nil || params.Offset < 0 || params.Limit < 0 || (params.Offset == 0 && params.Limit == 0) {
+		return fmt.Sprintf("%s(%s)", tool.ToolRead, path)
+	}
+	start := params.Offset
+	if start <= 0 {
+		start = 1
+	}
+	if params.Limit > 0 {
+		return fmt.Sprintf("%s(%s) · lines %d–%d", tool.ToolRead, path, start, start+params.Limit-1)
+	}
+	return fmt.Sprintf("%s(%s) · lines %d–", tool.ToolRead, path, start)
+}
+
 func formatToolResultSize(toolName, content string) string {
 	switch toolName {
 	case "WebFetch":
@@ -785,15 +999,24 @@ func formatToolResultSize(toolName, content string) string {
 }
 
 func extractParenContent(s, fallback string) string {
-	start := strings.Index(s, "(")
+	start := strings.IndexByte(s, '(')
 	if start == -1 {
 		return fallback
 	}
-	end := strings.Index(s[start:], ")")
-	if end == -1 {
-		return fallback
+
+	depth := 0
+	for i := start; i < len(s); i++ {
+		switch s[i] {
+		case '(':
+			depth++
+		case ')':
+			depth--
+			if depth == 0 {
+				return s[start+1 : i]
+			}
+		}
 	}
-	return s[start+1 : start+end]
+	return fallback
 }
 
 func formatLineCount(content string) string {
@@ -820,7 +1043,7 @@ func renderToolLineWithIcon(label string, width int, iconText string) string {
 // command body lines up in one column with the "$" as a hanging prompt to its
 // left. The "$" aligns with the "⎿" result marker below, while the command text
 // aligns with the result's tool label (for example, "Bash").
-const bashPrompt = "  $  "
+const bashPrompt = "  $ "
 
 // renderBashToolCall renders a Bash tool call so its command is always readable
 // in full. A short single-line command keeps the compact Bash(cmd) label; a
@@ -831,17 +1054,10 @@ const bashPrompt = "  $  "
 func renderBashToolCall(input string, width int, icon string) string {
 	command, description := extractBashCommand(input)
 	if command == "" {
-		return renderToolLineWithIcon(fmt.Sprintf("%s(%s)", tool.ToolBash, extractToolArgs(input)), width, icon) + "\n"
+		command = "(no command)"
 	}
 
 	budget := maxToolLabelWidth(width)
-
-	// A short single-line command fits on the compact label untouched.
-	if !strings.Contains(command, "\n") {
-		if label := fmt.Sprintf("%s(%s)", tool.ToolBash, command); lipgloss.Width(label) <= budget {
-			return renderToolLineWithIcon(label, width, icon) + "\n"
-		}
-	}
 
 	var sb strings.Builder
 

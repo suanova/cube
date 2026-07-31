@@ -517,6 +517,9 @@ type ToolResultData struct {
 	ToolInput   string
 	Width       int
 	Details     any
+	// Nested indicates this result is rendering immediately below its tool call.
+	// Nested results show a terminal state without repeating the tool name.
+	Nested bool
 	// Decision is the auto-review decision for this call (nil if it was not
 	// judged), drawn as a colored line between the call and its result.
 	Decision *core.ReviewDecision
@@ -584,7 +587,11 @@ func RenderToolCalls(params ToolCallsParams) string {
 				row = renderBashToolCall(tc.Input, params.Width, icon)
 			} else {
 				args := extractToolArgs(tc.Input)
-				row = renderToolLineWithIcon(fmt.Sprintf("%s(%s)", tc.Name, args), params.Width, icon) + "\n"
+				label := fmt.Sprintf("%s(%s)", tc.Name, args)
+				if tc.Name == tool.ToolRead {
+					label = formatReadToolLabel(tc.Input, args)
+				}
+				row = renderToolLineWithIcon(label, params.Width, icon) + "\n"
 			}
 			sb.WriteString(appendRowDetail(row, runningRowDetail(tc, params)))
 		}
@@ -593,6 +600,7 @@ func RenderToolCalls(params ToolCallsParams) string {
 			resultData.ToolInput = tc.Input
 			resultData.Interactive = params.Interactive
 			resultData.Width = params.Width
+			resultData.Nested = true
 			// Decision sits between the call and its result, mirroring the
 			// order things happened: judged → ran → produced this output.
 			sb.WriteString(renderDecision(resultData.Decision))

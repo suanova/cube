@@ -327,8 +327,8 @@ func TestGitDiscardingTierIsFlooredButReviewable(t *testing.T) {
 	}
 	for _, cmd := range discarding {
 		args := map[string]any{"command": cmd}
-		if reason, _ := confirmationFloor("Bash", args); reason == "" {
-			t.Errorf("%q left the confirmation floor entirely", cmd)
+		if RecoverableReason("Bash", args) == "" {
+			t.Errorf("%q left the confirmation tier entirely", cmd)
 		}
 		if r := UnrecoverableReason("Bash", args); r != "" {
 			t.Errorf("%q read as unrecoverable (%s); the judge can never weigh it", cmd, r)
@@ -340,7 +340,7 @@ func TestGitDiscardingTierIsFlooredButReviewable(t *testing.T) {
 	}
 
 	// A lease-guarded push never enters the tier at all.
-	if reason, _ := confirmationFloor("Bash", map[string]any{"command": "git push --force-with-lease"}); reason != "" {
+	if RecoverableReason("Bash", map[string]any{"command": "git push --force-with-lease"}) != "" {
 		t.Error("--force-with-lease should not be floored")
 	}
 
@@ -668,8 +668,13 @@ func TestCheckPermissionWithReason(t *testing.T) {
 		},
 		{
 			"destructive has reason",
-			"Bash", map[string]any{"command": "rm -rf /"},
+			"Bash", map[string]any{"command": "rm -rf /tmp/x"},
 			perm.Prompt, "confirmation: destructive command",
+		},
+		{
+			"root removal has circuit-breaker reason",
+			"Bash", map[string]any{"command": "rm -rf /"},
+			perm.Prompt, "circuit breaker: removal targets the filesystem root or home directory",
 		},
 	}
 
@@ -739,12 +744,38 @@ func TestDenialTracking(t *testing.T) {
 	}
 }
 
+func TestIsRootOrHomeRemoval(t *testing.T) {
+	trips := []string{
+		"rm -rf /", "rm -fr /", "rm -r /", "rm --recursive /",
+		"rm -rf /*", "rm -rf ~", "rm -rf ~/", "rm -rf ~/*",
+		"rm -rf $HOME", "rm -rf ${HOME}/",
+		"sudo rm -rf /", "sudo timeout 5 rm -rf /", "git diff && rm -rf ~",
+		`echo "$(rm -rf ~)"`, "echo `rm -rf /`",
+	}
+	for _, cmd := range trips {
+		if !isRootOrHomeRemoval(cmd) {
+			t.Errorf("%q should trip the circuit breaker", cmd)
+		}
+	}
+
+	passes := []string{
+		"rm -rf /tmp/x", "rm -rf ~/project", "rm file.txt", "rm -rf ./build",
+		"echo rm -rf /", "ls /", "git push --force origin main",
+	}
+	for _, cmd := range passes {
+		if isRootOrHomeRemoval(cmd) {
+			t.Errorf("%q should NOT trip the circuit breaker", cmd)
+		}
+	}
+}
+
 func TestBypassPermissionsMode(t *testing.T) {
 	settings := &Data{}
 	session := &SessionPermissions{
-		Mode:            ModeBypassPermissions,
-		AllowedTools:    make(map[string]bool),
-		AllowedPatterns: make(map[string]bool),
+		Mode:               ModeBypassPermissions,
+		AllowedTools:       make(map[string]bool),
+		AllowedPatterns:    make(map[string]bool),
+		WorkingDirectories: []string{"/repo"},
 	}
 
 	tests := []struct {
@@ -764,24 +795,46 @@ func TestBypassPermissionsMode(t *testing.T) {
 			perm.Permit,
 		},
 		{
-			"bypass permits protected path without confirmation",
-			"Edit", map[string]any{"path": "/repo/.git/hooks/pre-commit"},
+			"bypass permits work-discarding git without confirmation",
+			"Bash", map[string]any{"command": "git reset --hard HEAD"},
 			perm.Permit,
 		},
 		{
-			"bypass permits destructive bash without confirmation",
-			"Bash", map[string]any{"command": "rm -rf /"},
-			perm.Permit,
-		},
-		{
-			"bypass permits suspicious bash without confirmation",
-			"Bash", map[string]any{"command": "zmodload zsh/system"},
+			"bypass permits force push without confirmation",
+			"Bash", map[string]any{"command": "git push --force origin main"},
 			perm.Permit,
 		},
 		{
 			"bypass permits writes outside working directories without confirmation",
 			"Write", map[string]any{"file_path": "/etc/san-test", "content": "x"},
 			perm.Permit,
+		},
+		{
+			"bypass permits destructive bash on a subpath",
+			"Bash", map[string]any{"command": "rm -rf /tmp/example"},
+			perm.Permit,
+		},
+		{
+			"bypass permits sudo",
+			"Bash", map[string]any{"command": "sudo systemctl restart nginx"},
+			perm.Permit,
+		},
+		{
+			"bypass permits protected path writes",
+			"Edit", map[string]any{"path": "/repo/.git/hooks/pre-commit"},
+			perm.Permit,
+		},
+		{
+			"bypass permits suspicious bash",
+			"Bash", map[string]any{"command": "zmodload zsh/system"},
+			perm.Permit,
+		},
+		{
+			// Input variants live in TestIsRootOrHomeRemoval; this case pins
+			// the wiring — the breaker outranks bypass in the pipeline.
+			"circuit breaker: rm -rf / still prompts in bypass",
+			"Bash", map[string]any{"command": "rm -rf /"},
+			perm.Prompt,
 		},
 	}
 
