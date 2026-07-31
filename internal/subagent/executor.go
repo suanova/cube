@@ -138,12 +138,14 @@ func (e *Executor) SetSkillsDirectory(skillsPrompt string) {
 	e.skillsPrompt = skillsPrompt
 }
 
-// SetMCP wires the parent's MCP access for the subagent. Tool schemas
-// and execution flow through tools; connection lifecycle for any
-// per-subagent server set flows through servers.
-func (e *Executor) SetMCP(tools mcp.Tools, servers mcp.Servers) {
+// SetMCPDependencies wires MCP tool access and the per-Agent connection lease
+// registry. The registry is a concrete *mcp.Registry rather than the mcp.Servers
+// interface because lease operations (acquireConnectionLease/releaseConnectionLease)
+// are unexported lifecycle details not exposed on Servers — adding them would
+// leak internal ownership semantics to every Servers consumer.
+func (e *Executor) SetMCPDependencies(tools mcp.Tools, connectionRegistry *mcp.Registry) {
 	e.mcpTools = tools
-	e.mcpServers = servers
+	e.mcpServers = connectionRegistry
 }
 
 // SetSessionStore configures session persistence for subagent conversations.

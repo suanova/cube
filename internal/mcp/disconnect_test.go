@@ -49,6 +49,7 @@ func connectedRegistry(t *testing.T, servers map[string]transport.Transport) *Re
 		c.mu.Unlock()
 		r.configs[name] = cfg
 		r.clients[name] = c
+		r.getOrCreateConnectionState(name).retainWithoutLeases = true
 	}
 	return r
 }
