@@ -1,6 +1,7 @@
 <div align="center">
   <h1>&lt; CUBE ✦ /&gt;</h1>
-  <p><strong>快速、开放的终端 Agent 运行框架</strong></p>
+  <p><strong>框架最小，Agent 最强。</strong></p>
+  <p>上下文精简，原生性能，从里到外都开放。</p>
   <p>
     <a href="https://github.com/suanova/cube/releases"><img src="https://img.shields.io/github/v/release/suanova/cube?style=flat-square" alt="Release"></a>
     <a href="https://genai-io.github.io/san/"><img src="https://img.shields.io/badge/%E5%AE%98%E7%BD%91-0d9488?style=flat-square" alt="官网"></a>
@@ -22,20 +23,26 @@
 
 > **Cube 是 [san](https://github.com/genai-io/san) 的 fork**，以社区项目形式继续开发。来自 `san` 的配置（`~/.san`、`SAN_*` 环境变量、`SAN.md`）会被自动读取 —— 见下方[分叉来源](#分叉来源)。
 
-Cube 是一个开源的**终端 Agent 运行框架** —— 一个原生 Go 二进制，把任意模型包进一个快速、可检视、受权限管控的循环。自带你的模型与扩展即可，无需另装 Node.js 或 Python 运行时。
+Cube 是一个开源的终端 Agent 运行时：一个原生 Go 二进制，不需要 Node.js 或 Python。模型碰到的一切 —— prompt、工具、provider、扩展 —— 都留给你替换。
 
-**为什么选 Cube**
+## 为什么选 Cube
 
-- **快速** —— 约 12 MB 单文件，约 0.01s 冷启动，无需额外运行时。
-- **开放** —— 模型、搜索、工具都可在运行时切换；自带你的 persona 人设与扩展。
-- **框架** —— 能调的是策略，不只是零件：自定义 **autopilot** 减少 human-in-the-loop，自定义 **self-learning** —— 在你工作时不断增长与打磨记忆和技能。
+**三** —— 三个特性，谁也不为谁让路。
+
+**小** —— 你的第一句话之前，只有约 2.3k token 的框架开销；剩下的上下文窗口全留给你的正事。落到磁盘上是一个 12 MB 的二进制、零运行时依赖 —— 笔记本、CI runner、`scratch` 容器，丢进去就能跑。
+
+**快** —— ~0.01s 冷启动，一次完整的工具调用任务端到端 ~3.3s。你等的是模型，不是客户端（[基准测试](#基准测试cube-vs-claude-code)）。
+
+**开** —— 模型、skills、subagents、MCP servers，想接就接；system prompt、Autopilot 的目标、自我学习的策略，都由你来写；`cube inspector` 回放任意一次运行。
+
+**小的是框架，不是 Agent 的能力。**
 
 <sub>*Cube 延续自 san，其名 **San**，即 **三**，符号取自 **☰**。语出《道德经》「三生万物」—— 一个运行时即可化身为任意 Agent，并以三步循环运转（推理 → 行动 → 观察）。命令为 `cube`。*</sub>
 
-## 特性
+## 开放架构
 
 <details>
-<summary><b>开放架构</b> &nbsp;·&nbsp; 总览图</summary>
+<summary><b>总览图</b></summary>
 
 <div align="center">
   <img src="assets/san.png" alt="Cube —— 可插拔模型、搜索后端、人设、技能与扩展，以及自我进化的 Agent" width="100%">
@@ -43,18 +50,11 @@ Cube 是一个开源的**终端 Agent 运行框架** —— 一个原生 Go 二�
 
 </details>
 
-- **模型** —— Anthropic、OpenAI、Google、DeepSeek、Moonshot、Alibaba、MiniMax、Z.ai（GLM）、SenseNova、Mimo、Volcengine（Ark）、Ollama（本地）、Agnes-AI。`/models`
-- **搜索** —— Exa、Tavily、Brave、Serper。`/search`
-- **人设与扩展** —— 可复用的 persona 配置，加上 Claude Code 的 skills、plugins、MCP servers、hooks 与沙箱化 subagents —— 全部无需改动即可运行。`/persona`
-- **自我学习** —— 可选开启；把近期工作沉淀为持久记忆与可复用技能，节奏与容量上限均可配置。*（Level 1；更高等级仍在路上。）*
+**接** —— 没有一块是焊死的。模型可选 Anthropic、OpenAI、Google、DeepSeek、Ollama 等十余家；联网搜索后端任选；扩展涵盖 skills、subagents、MCP servers、plugins、hooks。
 
-### 工程实现
+**写** —— Agent 怎么做事，是你能改的文本，不是编死在二进制里的东西。拼装 system prompt（[原理](docs/concepts/harness-channels.md)），打包成可随时切换的 persona，给 Autopilot 一个目标，为自我学习定一套策略。
 
-- **随处运行** —— 面向 Windows、macOS、Linux 的单一静态二进制；同一文件可在笔记本、边缘设备或 `scratch` 容器中运行（[体积](docs/operations/footprint.md) · [基准测试](#基准测试cube-vs-claude-code)）。
-- **权限** —— 三种模式（询问 · 自动接受 · 自动审查），`Shift+Tab` 切换；subagent 继承权限门控（[详情](docs/concepts/permission-model.md)）。
-- **会话** —— 自动保存、恢复（`--continue` / `--resume`）、Fork（`/fork`）、自动压缩（`/compact`），以及逐消息成本追踪。
-- **检查器** —— 本地 Web UI，回放转录并检视系统 prompt（`cube inspector`）。
-- 另有事件驱动的 subagent 协同、TUI 主题与 prompt 预测。
+**看** —— 没有一步是暗箱。Cube 能自作主张到什么程度由你定，subagent 继承同一个选择（[权限模型](docs/concepts/permission-model.md)）；Inspector 回放任意一次运行，模型看到的一切原样呈现。
 
 
 ## 安装
@@ -108,18 +108,14 @@ mkdir -p ~/.local/bin && mv cube ~/.local/bin/
 ## 使用
 
 ```bash
-cube                             # 交互模式
-cube "解释这个函数"               # 一次性运行
-cube -p "做某件事情"              # print 模式（无 TUI），可管道
-cube --continue                  # 恢复最近的会话
-cube --resume                    # 选择历史会话恢复
-
-# 子命令（运行 `cube <command> --help` 查看完整列表）
-cube inspector                   # 会话转录查看器
-cube agent run --prompt "..."                    # 运行 headless agent
-cube plugin <list|install|enable|...>          # 管理插件
-cube mcp <add|list|remove|...>                 # 管理 MCP 服务器
+cube                         # 交互模式
+cube "解释这个函数"            # 一次性运行
+cube -p "做某件事"             # print 模式（无 TUI），可管道
+cube --continue               # 恢复最近的会话
+cube --resume                 # 选择历史会话恢复
 ```
+
+子命令：`inspector` · `agent` · `plugin` · `mcp` —— 各自运行 `cube <command> --help` 查看。
 
 | 操作 | 命令 / 快捷键 |
 |---|---|

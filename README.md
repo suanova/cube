@@ -1,6 +1,7 @@
 <div align="center">
   <h1>&lt; CUBE ✦ /&gt;</h1>
-  <p><strong>A fast, open agent harness for the terminal, built on a flexible and extensible architecture.</strong></p>
+  <p><strong>Minimal harness. Maximum agent.</strong></p>
+  <p>Small context, native speed, open all the way down.</p>
   <p>
     <a href="https://github.com/suanova/cube/releases"><img src="https://img.shields.io/github/v/release/suanova/cube?style=flat-square" alt="Release"></a>
     <a href="https://genai-io.github.io/san/"><img src="https://img.shields.io/badge/Website-0d9488?style=flat-square" alt="Website"></a>
@@ -25,21 +26,28 @@
 > `SAN_*` env vars, `SAN.md`) is read automatically — see
 > [Fork lineage](#fork-lineage) below.
 
-Cube is an open-source terminal agent harness: one native Go binary for
-model-driven work, with no Node.js or Python runtime.
+Cube is an open-source terminal agent runtime: one native Go binary, no Node.js
+or Python. Everything the model touches — prompt, tools, providers, extensions —
+stays yours to change.
 
-**Why Cube**
+## Why Cube
 
-- **Fast** — a ~12 MB single binary, ~0.01s cold start, no separate runtime.
-- **Open** — swap the model, search, and tools at runtime; bring your own persona profiles and extensions.
-- **Harness** — configure permissions, autopilot, memory, and skills for your workflow.
+Three properties, and Cube refuses to trade any one of them for the others.
+
+**Small** — ~2.3k tokens of harness reach the model before your first message; the rest of the context window goes to your work. On disk, one 12 MB binary with zero runtime deps — it drops onto a laptop, a CI runner, or a `scratch` container.
+
+**Fast** — ~0.01s cold start, and a full tool-use task returns in ~3.3s end to end. What you wait on is the model, not the client ([benchmark](#benchmark-cube-vs-claude-code)).
+
+**Open** — plug in models, skills, subagents, and MCP servers; write your own system prompt, autopilot goals, and self-learning strategy; replay any run in `cube inspector`.
+
+**A minimal harness, not a minimal agent.**
 
 <sub>*Cube continues san, whose name is **San**, written **三** ("three") and drawn **☰**. From the Dao De Jing, 三生万物 — "three begets the ten-thousand things": one runtime that becomes any agent, running a three-step loop (reason → act → observe). The command is `cube`.*</sub>
 
-## Features
+## Open architecture
 
 <details>
-<summary><b>Open architecture</b> &nbsp;·&nbsp; overview diagram</summary>
+<summary><b>Overview diagram</b></summary>
 
 <div align="center">
   <img src="assets/san.png" alt="Cube — pluggable models, search backends, personas, skills &amp; extensions, and a self-evolving agent" width="100%">
@@ -47,10 +55,9 @@ model-driven work, with no Node.js or Python runtime.
 
 </details>
 
-- **Models** — Anthropic, OpenAI, Google, DeepSeek, Moonshot, Alibaba, MiniMax, Z.ai (GLM), SenseNova, Mimo, Volcengine (Ark), Ollama (local), Agnes-AI. `/models`
-- **Search** — Exa, Tavily, Brave, Serper. `/search`
-- **Personas & extensions** — reusable profiles, skills, plugins, MCP servers, hooks, and permission-gated subagents. `/persona`
-- **Self-learning** — opt-in; distills durable memory and reusable skills with configurable cadence and caps. *(Level 1; deeper levels on the way.)*
+**Plug in** — nothing is hardwired. Models from Anthropic, OpenAI, Google, DeepSeek, Ollama, and a dozen more; the web search backend of your choice; extensions of every kind — skills, subagents, MCP servers, plugins, hooks.
+
+**Write** — how the agent behaves is text you own, not something baked into the binary. Compose the system prompt ([how](docs/concepts/harness-channels.md)), bundle it into a persona you can switch, give autopilot a goal, set the strategy self-learning follows.
 
 ### Engineering
 
