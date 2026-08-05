@@ -268,6 +268,10 @@ func (m *model) buildAgentParams() agent.BuildParams {
 			return agent.PermReviewResult{Allow: true, Reason: "autopilot: " + verdict.Reason}
 		},
 
+		HookAllowResolver: func(name string, args map[string]any) bool {
+			return m.services.Setting.ResolveHookAllow(name, args, m.env.SessionPermissions)
+		},
+
 		StreamFirstChunkTimeout: streamFirstChunk,
 		StreamIdleTimeout:       streamIdle,
 	}
@@ -293,7 +297,7 @@ func (m *model) resolveReviewerModel(ref string) (llm.Provider, string) {
 
 // recordDecision tallies one auto-review decision for the status-bar count and
 // stashes it for the renderer, keyed by the tool call ID carried in ctx and
-// consumed (load + delete) in TakeDecision — so the handoff map only ever
+// consumed (load + delete) in TakeReviewDecision — so the handoff map only ever
 // holds calls whose result has not arrived yet. The approved flag
 // picks the counter, so the count and the inline annotations can never drift.
 // The count is bumped even when ctx carries no tool call ID; only the stash
@@ -309,12 +313,12 @@ func (m *model) recordDecision(ctx context.Context, approved bool, reason string
 	}
 }
 
-// TakeDecision consumes the decision stashed for a tool call (load + delete),
+// TakeReviewDecision consumes the decision stashed for a tool call (load + delete),
 // so it stamps exactly one rendered result and the handoff map holds only
 // in-flight calls. Returns nil when the call was not auto-reviewed. Mirrors the
 // tool side-effect handoff (Tool.PopSideEffect), consumed at the same point in
 // OnToolResult.
-func (m *model) TakeDecision(callID string) *core.ReviewDecision {
+func (m *model) TakeReviewDecision(callID string) *core.ReviewDecision {
 	// No empty-callID guard: recordDecision never stores under an empty key, so
 	// LoadAndDelete("") already misses and returns nil.
 	v, ok := m.pendingDecisions.LoadAndDelete(callID)
@@ -452,7 +456,26 @@ func (m *model) seedAgentMessages(pendingSend string) []core.Message {
 			coreMessages = coreMessages[:len(coreMessages)-1]
 		}
 	}
-	return coreMessages
+	return m.dropImagesTextOnlyModelRejects(coreMessages)
+}
+
+// dropImagesTextOnlyModelRejects removes image attachments from a seeded chain
+// the active model can't accept, keeping the surrounding text. The adaptTurnForProvider
+// call in the submit path handles new turns, but history predating the current model
+// still holds them — switch a conversation from a vision-capable model to a
+// text-only one and every later turn replays those images, which the provider
+// rejects outright. Every rebuild passes through here, so the switch itself
+// (which stops the session) is enough to clear them.
+func (m *model) dropImagesTextOnlyModelRejects(msgs []core.Message) []core.Message {
+	if llm.SupportsImages(m.env.LLMProvider, m.env.GetModelID()) {
+		return msgs
+	}
+	stripped := make([]core.Message, len(msgs))
+	for i, msg := range msgs {
+		msg.Images = nil
+		stripped[i] = msg
+	}
+	return stripped
 }
 
 func (m *model) sendToAgent(content string, images []core.Image) tea.Cmd {
@@ -551,11 +574,24 @@ func (m *model) ContinueOutbox() tea.Cmd {
 	return conv.DrainAgentOutbox(m.services.Agent.Outbox())
 }
 
-func (m *model) OnPermGateRequest(req *conv.PermGateRequest) tea.Cmd {
+func (m *model) HandlePermGate(req *conv.PermGateRequest) tea.Cmd {
 	m.services.Agent.SetPendingPermission(req)
 	if req == nil {
+		m.conv.Tool.ClearAwaitingApproval()
 		return nil
 	}
+	// The call was stamped as started by its PreToolEvent, which fired before
+	// this request: name it so its row reports waiting on the user while its
+	// batch siblings keep reporting the work they really are doing. A request
+	// with no ID names nothing, which leaves the rows on the blunt freeze the
+	// modal already forces (see conv.modalNamesNoCall) — correct, but only
+	// because it degrades, so say so rather than let a future caller lose the
+	// per-call state without a trace.
+	if req.ToolCallID == "" {
+		log.Logger().Warn("permission request carries no tool call ID; every in-flight row falls back to the docked-modal freeze",
+			zap.String("tool", req.ToolName))
+	}
+	m.conv.Tool.MarkAwaitingApproval(req.ToolCallID)
 
 	permReq := m.preparePermissionRequest(req)
 	// Emit permission.required with the metadata about to be rendered to the

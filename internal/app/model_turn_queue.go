@@ -1,16 +1,19 @@
-// Turn-boundary inbox drain and prompt injection. After every agent turn
-// ends we drain (in priority order) queued user messages, cron-fired
-// prompts, async-hook continuations, and the main-loop notice buffer (broker
-// messages routed to "main"). Each drained item is converted to a notice +
-// optional re-send to the agent. Also handles the Stop hook result that gates
+// Inbox drain and prompt injection. After every agent turn ends we drain (in
+// priority order) queued user messages, cron-fired prompts, async-hook
+// continuations, and the main-loop notice buffer (broker messages routed to
+// "main"). Each drained item is converted to a notice + optional re-send to the
+// agent. Notice delivery is not limited to the turn boundary — see notify.go
+// for when each seam applies. Also handles the Stop hook result that gates
 // session persistence.
 package app
 
 import (
 	"fmt"
+	"strings"
 
 	tea "charm.land/bubbletea/v2"
 
+	"github.com/genai-io/san/internal/app/input"
 	"github.com/genai-io/san/internal/app/trigger"
 	"github.com/genai-io/san/internal/core"
 	"github.com/genai-io/san/internal/log"
@@ -48,13 +51,13 @@ func (m *model) handleStopHookResult(msg stopHookResultMsg) tea.Cmd {
 // releaseQueuedMessage hands the next queued user message to the running agent
 // and returns (cmd, true) when one was released, or (nil, false) when the queue
 // is empty or its head is under edit (SelectIdx 0 — dispatching would send
-// pre-edit text and orphan the user's changes). An image-blocked item is diverted
-// back to the textarea with a notice instead of sent.
+// pre-edit text and orphan the user's changes). A text-only model receives the
+// queued images' paths inlined into the content instead of the attachments.
 //
 // The message is shown in the conversation now, at release time, so it never
 // vanishes between the queue and the flow; the agent addresses it once it ingests
-// it a step or a turn later, and its ingest echo is a no-op (see OnAgentMessage).
-// Shared by the step-boundary (DrainQueuedAtStep) and turn-boundary
+// it a step or a turn later, and the agent's echo of it is ignored (see conv.applyAgentEvent).
+// Shared by the step-boundary (OnStepEnd) and turn-boundary
 // (drainTurnQueues) drains.
 func (m *model) releaseQueuedMessage() (tea.Cmd, bool) {
 	if m.userInput.Queue.SelectIdx == 0 {
@@ -64,16 +67,38 @@ func (m *model) releaseQueuedMessage() (tea.Cmd, bool) {
 	if !ok {
 		return nil, false
 	}
-	if m.imagesBlockedForModel(item.Images) {
-		// Hand the message back instead of dropping it — the notice tells the
-		// user to remove the image or switch models.
-		m.userInput.ReturnToTextarea(item.Content, item.Images)
-		return tea.Batch(m.CommitMessages()...), true
+	// Process image references (leading image paths, @-references, bare paths)
+	// just like the normal submit path does — the raw queued content hasn't been
+	// through ProcessImageRefs yet. On failure this message still goes out: it
+	// runs mid-stream, so there is no textarea to hand it back to (the user is
+	// typing the next one there). Send what resolved.
+	content, fileImages, err := input.ProcessImageRefs(m.env.CWD, item.Content)
+	if err != nil {
+		m.conv.AddNotice("Image error: " + err.Error())
 	}
-	m.conv.Append(core.ChatMessage{Role: core.RoleUser, Content: item.Content, Images: item.Images})
-	svc, content, images := m.services.Agent, item.Content, item.Images
+	// Images the user attached travel on the item — they were moved off the
+	// textarea when it was queued. Anything pending in the textarea now belongs
+	// to the next message, so it must not be picked up here.
+	images := make([]core.Image, 0, len(item.Images)+len(fileImages))
+	images = append(images, item.Images...)
+	images = append(images, fileImages...)
+	// Split display from content the way buildUserMessage does: the queued text
+	// still carries the [Image #N] markers the textarea used to position its
+	// attachments, which the reader wants to see and the model doesn't.
+	displayContent := content
+	content = strings.TrimSpace(core.InlineImageTokenRe.ReplaceAllString(content, ""))
+	// Text-only models can't receive image parts; inline each image's path so
+	// the model can decide how to use it (e.g. via an MCP tool).
+	content, providerImages := m.adaptTurnForProvider(content, images)
+	m.conv.Append(core.ChatMessage{
+		Role:           core.RoleUser,
+		Content:        content,
+		DisplayContent: displayContent,
+		Images:         images,
+	})
+	svc := m.services.Agent
 	send := func() tea.Msg {
-		svc.Send(content, images)
+		svc.Send(content, providerImages)
 		return nil
 	}
 	return tea.Batch(append(m.CommitMessages(), send)...), true
@@ -103,35 +128,74 @@ func (m *model) drainTurnQueues() (tea.Cmd, bool) {
 		}
 	}
 
-	if len(m.pendingNotices) > 0 {
-		events := m.pendingNotices
-		m.pendingNotices = nil
-		// Listener may have just re-armed during OnTurnEnd processing;
-		// catch any chan events that landed in that window too.
-		if extra := drainNotices(m.mainNotices, maxNoticesPerDrain-len(events)); len(extra) > 0 {
-			events = append(events, extra...)
-		}
-		return m.injectNotices(events), true
+	// Whatever releaseParkedNotices did not get to: a task that finished during
+	// the turn's last step, or during a turn that never ran a tool.
+	if notices := m.takeParkedNotices(); len(notices) > 0 {
+		return m.injectAsNewTurn(mergeNotices(notices)), true
 	}
 
 	return nil, false
 }
 
-// injectNotice surfaces merged main-loop notices (subagent completions,
-// interim messages) into the live conversation: the notice line is shown, the
-// body (if any) is submitted to the main agent as a fresh turn.
-func (m *model) injectNotice(n mainNotice) tea.Cmd {
-	if n.Display != "" {
-		if n.FromAgent {
-			m.conv.AddAgentNotice(n.Display)
-		} else {
-			m.conv.AddNotice(n.Display)
-		}
+// takeParkedNotices removes everything parked during the running turn, topped
+// up from the channel so notices that landed since the last read ride along in
+// the same injection rather than trickling in one step apart.
+func (m *model) takeParkedNotices() []mainNotice {
+	if len(m.pendingNotices) == 0 {
+		return nil
 	}
+	notices := m.pendingNotices
+	m.pendingNotices = nil
+	if extra := drainNotices(m.mainNotices, maxNoticesPerDrain-len(notices)); len(extra) > 0 {
+		notices = append(notices, extra...)
+	}
+	return notices
+}
+
+// releaseParkedNotices injects what LastMessageIsStreaming held back, at the step
+// boundary where the tail is free again.
+func (m *model) releaseParkedNotices() tea.Cmd {
+	notices := m.takeParkedNotices()
+	if len(notices) == 0 {
+		return nil
+	}
+	log.QueueLog("releaseParkedNotices: releasing %d notice(s) mid-turn", len(notices))
+	return m.injectIntoRunningTurn(mergeNotices(notices))
+}
+
+// injectIntoRunningTurn hands a notice to the agent partway through a turn it is
+// already running: sendToAgent reaches its inbox, which it drains between steps,
+// so the content is in the conversation the next inference reads. Its pair is
+// injectAsNewTurn, whose SubmitToAgent must not be used here — that path can
+// rebuild the agent session, which would tear down the running turn.
+func (m *model) injectIntoRunningTurn(n mainNotice) tea.Cmd {
+	m.showNoticeLine(n)
+	cmds := m.CommitMessages()
+	if n.Content != "" { // display-only notices have nothing for the model to read
+		cmds = append(cmds, m.sendToAgent(n.Content, nil))
+	}
+	return tea.Batch(cmds...)
+}
+
+// injectAsNewTurn delivers a notice with no turn running: the line is shown and the
+// body, if any, starts a fresh turn.
+func (m *model) injectAsNewTurn(n mainNotice) tea.Cmd {
+	m.showNoticeLine(n)
 	if n.Content == "" {
 		return tea.Batch(m.CommitMessages()...)
 	}
 	return m.SubmitToAgent(n.Content, nil)
+}
+
+func (m *model) showNoticeLine(n mainNotice) {
+	if n.Display == "" {
+		return
+	}
+	if n.FromAgent {
+		m.conv.AddAgentNotice(n.Display)
+	} else {
+		m.conv.AddNotice(n.Display)
+	}
 }
 
 func drainNotices(ch <-chan mainNotice, max int) []mainNotice {
@@ -159,21 +223,22 @@ func awaitMainNotice(ch <-chan mainNotice) tea.Cmd {
 	}
 }
 
-// onMainNotice injects a message now when idle, or parks it in pendingNotices
-// for the next turn boundary when a stream is in flight. Re-arming is
+// onMainNotice routes an arriving notice to the earliest injection the
+// conversation can take: into a running turn, as a fresh turn when idle, or
+// parked while the stream owns the tail (see notify.go). Re-arming is
 // unconditional: after the read the chan is empty, so the next firing waits for
 // the next message.
 func (m *model) onMainNotice(n mainNotice) tea.Cmd {
 	next := awaitMainNotice(m.mainNotices)
-	if m.conv.Stream.Active {
+	switch {
+	case m.conv.LastMessageIsStreaming():
 		m.pendingNotices = append(m.pendingNotices, n)
 		return next
+	case m.conv.Stream.Active:
+		return tea.Batch(m.injectIntoRunningTurn(n), next)
+	default:
+		return tea.Batch(m.injectAsNewTurn(n), next)
 	}
-	return tea.Batch(m.injectNotices([]mainNotice{n}), next)
-}
-
-func (m *model) injectNotices(notices []mainNotice) tea.Cmd {
-	return m.injectNotice(mergeNotices(notices))
 }
 
 // injectCronPrompt fires a scheduled cron prompt as if the user had just

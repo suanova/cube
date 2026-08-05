@@ -19,12 +19,12 @@ import (
 	"github.com/genai-io/san/internal/tool"
 )
 
-func (m *model) OnTokenUsage(resp *core.InferResponse) {
+func (m *model) OnInference(resp *core.InferResponse) {
 	if resp == nil {
 		return
 	}
 	// PostInfer starts a new step: re-arm the one-per-step queue release that
-	// this step's PostTool events will use (see DrainQueuedAtStep).
+	// this step's PostTool events will use (see OnStepEnd).
 	m.drainedThisStep = false
 
 	if m.userInput.Provider.StatusMessage == "compacted" {
@@ -55,29 +55,22 @@ func (m *model) OnTokenUsage(resp *core.InferResponse) {
 // needsSpinner it reads live runtime state, not persisted tracker status.
 func (m *model) HasRunningTasks() bool { return m.hasRunningBackgroundTask() }
 
-// OnAgentMessage observes the agent's MessageEvent echoes only. Every path that
-// hands a user message to the agent — idle submit, queue release
-// (releaseQueuedMessage), cron prompt, async hook — appends it to m.conv at the
-// call site, so the echo has nothing to do here: appending again would
-// double-display.
-func (m *model) OnAgentMessage(core.Message) tea.Cmd {
-	return nil
-}
-
-// DrainQueuedAtStep releases one queued user message to the running agent at a
-// step boundary (a PostTool, where the turn continues), so a following LLM
-// response addresses it — the message stays editable in the queue right up to
-// this release. One release per step (drainedThisStep). The shared release
-// mechanics live in releaseQueuedMessage, shared with the turn-boundary drain.
-func (m *model) DrainQueuedAtStep() tea.Cmd {
-	if m.drainedThisStep || !m.services.Agent.Active() {
+// OnStepEnd releases pending work into a still-running turn at a step
+// boundary (a PostTool, where the turn continues): notices the stream held
+// back, plus one queued user message — the cap is what keeps the queue
+// editable until release. Counterpart to drainTurnQueues, which runs once the
+// turn has ended.
+func (m *model) OnStepEnd() tea.Cmd {
+	if !m.services.Agent.Active() {
 		return nil
 	}
-	cmd, released := m.releaseQueuedMessage()
-	if released {
-		m.drainedThisStep = true
+	notices := m.releaseParkedNotices()
+	if m.drainedThisStep {
+		return notices
 	}
-	return cmd
+	queued, released := m.releaseQueuedMessage()
+	m.drainedThisStep = released
+	return tea.Batch(notices, queued)
 }
 
 func (m *model) OnToolResult(tr core.ToolResult) *core.ToolResult {
@@ -140,28 +133,33 @@ func (m *model) OnTurnEnd(result core.Result) tea.Cmd {
 	log.QueueLog("OnTurnEnd: starting queueLen=%d", m.userInput.Queue.Len())
 	commitCmds := m.CommitMessages()
 
-	if cmd, found := m.drainTurnQueues(); found {
-		log.QueueLog("OnTurnEnd: drained queued message, skipping hooks")
-		if cmd != nil {
+	// User-initiated cancel surfaces here as a Result with StopCancelled now
+	// that ThinkAct returns a phantom Result on context.Canceled. It precedes
+	// the queue drain because draining submits a fresh turn — the input queue,
+	// a cron prompt, an async hook or a parked agent notice — which is how Esc
+	// stopped one inference and left the loop running. Each queue has its own
+	// later drain, so holding them here loses nothing.
+	//
+	// Stop / idle-notification hooks would otherwise fire on every Esc —
+	// confusing for the user and for hooks that template result.Content (which
+	// is empty for a cancelled turn). We still persist so the [Interrupted]
+	// marker and cancelled tool_result rows survive a crash/quit, and
+	// re-arm prompt suggestions for the now-idle textarea.
+	if result.StopReason == core.StopCancelled {
+		log.QueueLog("OnTurnEnd: turn was cancelled, holding queues and skipping idle hooks")
+		if cmd := m.persistAfterTurn(); cmd != nil {
+			commitCmds = append(commitCmds, cmd)
+		}
+		if cmd := m.startPromptSuggestion(); cmd != nil {
 			commitCmds = append(commitCmds, cmd)
 		}
 		commitCmds = append(commitCmds, m.ContinueOutbox())
 		return tea.Batch(commitCmds...)
 	}
 
-	// User-initiated cancel surfaces here as a Result with StopCancelled now
-	// that ThinkAct returns a phantom Result on context.Canceled. Stop /
-	// idle-notification hooks would otherwise fire on every Esc — confusing
-	// for the user and for hooks that template result.Content (which is
-	// empty for a cancelled turn). We still persist so the [Interrupted]
-	// marker and cancelled tool_result rows survive a crash/quit, and
-	// re-arm prompt suggestions for the now-idle textarea.
-	if result.StopReason == core.StopCancelled {
-		log.QueueLog("OnTurnEnd: turn was cancelled, skipping idle hooks")
-		if cmd := m.persistAfterTurn(); cmd != nil {
-			commitCmds = append(commitCmds, cmd)
-		}
-		if cmd := m.startPromptSuggestion(); cmd != nil {
+	if cmd, found := m.drainTurnQueues(); found {
+		log.QueueLog("OnTurnEnd: drained queued message, skipping hooks")
+		if cmd != nil {
 			commitCmds = append(commitCmds, cmd)
 		}
 		commitCmds = append(commitCmds, m.ContinueOutbox())

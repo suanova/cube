@@ -3,10 +3,10 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Cube — 开源的统一智能体运行时</title>
-<meta name="description" content="Cube 是一个终端原生的统一智能体运行时：一个 ~12 MB 的 Go 二进制文件，可插拔的 LLM 提供商，完全兼容 Claude Code 技能、插件和 MCP。~0.01 秒冷启动，零运行时依赖。">
-<meta property="og:title" content="Cube — 终端的统一智能体运行时">
-<meta property="og:description" content="单一 Go 二进制文件。可插拔 LLM 提供商。兼容 Claude Code。~0.01 秒冷启动，~12 MB。">
+<title>Cube — 开销最小，Agent 最强。</title>
+<meta name="description" content="Cube 是一个开源的终端 Agent 运行时：一个 12 MB 的 Go 二进制，约 2.3k token 框架开销，不需要 Node.js 或 Python。prompt、工具、provider、扩展都留给你替换。">
+<meta property="og:title" content="Cube — 开销最小，Agent 最强。">
+<meta property="og:description" content="上下文精简，原生性能，从里到外都开放。一个 12 MB Go 二进制的开源终端 Agent 运行时。">
 <meta property="og:type" content="website">
 <meta property="og:url" content="https://genai-io.github.io/san/">
 <meta property="og:image" content="https://genai-io.github.io/san/san.png">
@@ -23,13 +23,12 @@
     <span class="logo"><a href="#top">&lt; SAN <span class="spark">✦</span> /&gt;</a></span>
     <button class="nav-toggle" aria-label="切换菜单" aria-expanded="false" onclick="toggleNav(this)">≡</button>
     <div class="nav-links" id="nav-links">
-      <a href="#features">功能</a>
-      <a href="#deploy">部署</a>
-      <a href="#footprint">性能</a>
+      <a href="#why">为什么</a>
+      <a href="#benchmark">基准</a>
       <a href="#community">社区</a>
       <span class="nav-sep" aria-hidden="true"></span>
       <a href="intro.html">介绍</a>
-      <a href="getting-started.zh.html">快速开始</a>
+      <a href="getting-started.zh.html">开始</a>
       <a href="docs.zh.html">文档</a>
       <span class="lang-switch">
         <button class="lang-btn" id="lang-btn" aria-haspopup="listbox" aria-expanded="false">
@@ -38,7 +37,7 @@
         </button>
         <div class="lang-menu" id="lang-menu" role="listbox"></div>
       </span>
-      <a class="nav-cta" href="https://github.com/suanova/cube">★ 在 GitHub 标星</a>
+      <a class="nav-cta" href="https://github.com/suanova/cube">★ GitHub</a>
     </div>
   </div>
 </nav>
@@ -46,9 +45,15 @@
 <header class="hero" id="top">
   <div class="wrap">
     <div class="hero-head">
-      <span class="kicker load-up d1">开源智能体运行时 · Apache-2.0</span>
-      <h1 class="load-up d2">Cube — 统一智能体<br>在你的<span class="grad">终端中进化</span></h1>
-      <p class="sub load-up d3">一个运行时，多种智能体——<strong>与你一起成长</strong></p>
+      <span class="kicker load-up d1">开源 · Apache-2.0</span>
+      <h1 class="load-up d2">开销最小，<br>Agent <em>最强</em>。</h1>
+      <p class="sub load-up d3">Cube 是一个开源的终端 Agent 运行时：一个原生 Go 二进制，不需要 Node.js 或 Python。模型碰到的一切 —— prompt、工具、provider、扩展 —— 都留给你替换。</p>
+      <div class="metrics load-up d4">
+        <span><b>~0.01s</b> 冷启动</span>
+        <span><b>~12 MB</b> 单文件</span>
+        <span><b>~2.3k</b> token 框架开销</span>
+        <span><b>零</b>运行时依赖</span>
+      </div>
     </div>
 
     <div class="screen-frame load-up d4">

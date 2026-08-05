@@ -32,6 +32,10 @@ type RenderContext struct {
 	// ToolProgress maps a running command's ID to its latest output counter
 	// ("1.2k lines"), shown next to the timer. Empty for calls with no output.
 	ToolProgress map[string]string
+	// AwaitingApprovalID is the in-flight call parked on a permission prompt.
+	// It was stamped as started before the prompt went out, so its row has to
+	// be told apart from the siblings that really are executing.
+	AwaitingApprovalID string
 
 	// ── Renderer / terminal env ─────────────────────────────────
 	Width      int
@@ -50,7 +54,11 @@ type RenderContext struct {
 	TaskOwnerMap map[string]string
 
 	// ── Modal interlock — suppress chrome under a tool prompt ───
-	InteractivePromptActive bool
+	// DockedModalActive marks the frames where a Question / Approval / secret
+	// modal owns the screen. The chat tail still renders above it, so anything
+	// that animates has to hold still: the turn is parked on the user's answer,
+	// not making progress.
+	DockedModalActive bool
 
 	// Interactive marks the live render pass (RenderActiveContent): the
 	// uncommitted tail the user can still act on. "(ctrl+o to expand)" hints
@@ -225,6 +233,7 @@ func renderAssistantWithTools(p RenderContext, msg core.ChatMessage, idx int, is
 		ToolCalls:            msg.ToolCalls,
 		StreamActive:         p.StreamActive,
 		IsLast:               isLast,
+		DockedModalActive:    p.DockedModalActive,
 		SpinnerView:          p.SpinnerView,
 		MDRenderer:           p.MDRenderer,
 		Width:                p.Width,
@@ -252,25 +261,27 @@ func renderAssistantWithTools(p RenderContext, msg core.ChatMessage, idx int, is
 	}
 
 	sb.WriteString(RenderToolCalls(ToolCallsParams{
-		ToolCalls:         msg.ToolCalls,
-		ToolCallsExpanded: msg.ToolCallsExpanded,
-		ResultMap:         resultMap,
-		ParallelMode:      len(p.PendingCalls) > 1,
-		TaskActivity:      p.TaskActivity,
-		PendingCalls:      p.PendingCalls,
-		CurrentIdx:        p.CurrentIdx,
-		ToolStartedAt:     p.ToolStartedAt,
-		ToolProgress:      p.ToolProgress,
-		ModelName:         p.ModelName,
-		InputTokens:       p.InputTokens,
-		OutputTokens:      p.OutputTokens,
-		Blink:             p.Blink,
-		AgentColors:       p.AgentColors,
-		SpinnerView:       p.SpinnerView,
-		TaskOwnerMap:      p.TaskOwnerMap,
-		MDRenderer:        p.MDRenderer,
-		Width:             p.Width,
-		Interactive:       p.Interactive,
+		ToolCalls:          msg.ToolCalls,
+		ToolCallsExpanded:  msg.ToolCallsExpanded,
+		ResultMap:          resultMap,
+		ParallelMode:       len(p.PendingCalls) > 1,
+		DockedModalActive:  p.DockedModalActive,
+		TaskActivity:       p.TaskActivity,
+		PendingCalls:       p.PendingCalls,
+		CurrentIdx:         p.CurrentIdx,
+		ToolStartedAt:      p.ToolStartedAt,
+		ToolProgress:       p.ToolProgress,
+		AwaitingApprovalID: p.AwaitingApprovalID,
+		ModelName:          p.ModelName,
+		InputTokens:        p.InputTokens,
+		OutputTokens:       p.OutputTokens,
+		Blink:              p.Blink,
+		AgentColors:        p.AgentColors,
+		SpinnerView:        p.SpinnerView,
+		TaskOwnerMap:       p.TaskOwnerMap,
+		MDRenderer:         p.MDRenderer,
+		Width:              p.Width,
+		Interactive:        p.Interactive,
 	}))
 
 	return sb.String()
@@ -322,15 +333,15 @@ func RenderActiveContent(p RenderContext) string {
 
 func renderPendingToolSpinnerFromParams(p RenderContext, suppressAgentLabel bool) string {
 	return RenderPendingToolSpinner(PendingToolSpinnerParams{
-		InteractivePromptActive: p.InteractivePromptActive,
-		BuildingTool:            p.BuildingTool,
-		PendingCalls:            p.PendingCalls,
-		CurrentIdx:              p.CurrentIdx,
-		TaskActivity:            p.TaskActivity,
-		SpinnerView:             p.SpinnerView,
-		Blink:                   p.Blink,
-		AgentColors:             p.AgentColors,
-		Width:                   p.Width,
-		SuppressAgentLabel:      suppressAgentLabel,
+		DockedModalActive:  p.DockedModalActive,
+		BuildingTool:       p.BuildingTool,
+		PendingCalls:       p.PendingCalls,
+		CurrentIdx:         p.CurrentIdx,
+		TaskActivity:       p.TaskActivity,
+		SpinnerView:        p.SpinnerView,
+		Blink:              p.Blink,
+		AgentColors:        p.AgentColors,
+		Width:              p.Width,
+		SuppressAgentLabel: suppressAgentLabel,
 	})
 }

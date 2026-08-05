@@ -1,6 +1,7 @@
 package input
 
 import (
+	"os"
 	"strings"
 	"testing"
 
@@ -166,6 +167,291 @@ func Test_imageRefPattern(t *testing.T) {
 						t.Errorf("match[%d][%d] = %q, want %q", i, j, part, tt.expected[i][j])
 					}
 				}
+			}
+		})
+	}
+}
+
+func Test_bareImagePathRe(t *testing.T) {
+	tests := []struct {
+		input    string
+		expected [][]string // nil means no match
+	}{
+		{
+			input:    "check /home/user/image.png",
+			expected: [][]string{{"/home/user/image.png", "/home/user/image.png", "png"}},
+		},
+		{
+			input:    "/absolute/path/photo.jpg analyze this",
+			expected: [][]string{{"/absolute/path/photo.jpg", "/absolute/path/photo.jpg", "jpg"}},
+		},
+		{
+			input:    "compare relative/path/a.png with ../other/b.jpeg",
+			expected: [][]string{{"relative/path/a.png", "relative/path/a.png", "png"}, {"../other/b.jpeg", "../other/b.jpeg", "jpeg"}},
+		},
+		{
+			input:    "no images here",
+			expected: nil,
+		},
+		{
+			input:    "just a bare name.png with no path",
+			expected: nil, // no path separator
+		},
+		{
+			input:    "image.png at start",
+			expected: nil, // no path separator
+		},
+		{
+			input:    "/path/to/image.webp end",
+			expected: [][]string{{"/path/to/image.webp", "/path/to/image.webp", "webp"}},
+		},
+		{
+			input:    "./animated.gif nearby",
+			expected: [][]string{{"./animated.gif", "./animated.gif", "gif"}},
+		},
+		{
+			input:    "C:\\Users\\me\\photo.jpeg here",
+			expected: [][]string{{"C:\\Users\\me\\photo.jpeg", "C:\\Users\\me\\photo.jpeg", "jpeg"}},
+		},
+		{
+			input:    "@prefix.png has no path separator",
+			expected: nil, // @ at start but no / in rest of path
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.input, func(t *testing.T) {
+			matches := bareImagePathRe.FindAllStringSubmatch(tt.input, -1)
+			if len(matches) != len(tt.expected) {
+				t.Errorf("FindAllStringSubmatch(%q) got %d matches, want %d", tt.input, len(matches), len(tt.expected))
+				return
+			}
+			for i, match := range matches {
+				if len(match) < 3 {
+					t.Errorf("match[%d] has %d groups, want 3", i, len(match))
+					continue
+				}
+				if match[0] != tt.expected[i][0] {
+					t.Errorf("match[%d][0] = %q, want %q", i, match[0], tt.expected[i][0])
+				}
+				if match[1] != tt.expected[i][1] {
+					t.Errorf("match[%d][1] = %q, want %q", i, match[1], tt.expected[i][1])
+				}
+				if match[2] != tt.expected[i][2] {
+					t.Errorf("match[%d][2] = %q, want %q", i, match[2], tt.expected[i][2])
+				}
+			}
+		})
+	}
+}
+
+func TestProcessImageRefs(t *testing.T) {
+	// Create a real image file for testing (1x1 transparent PNG)
+	tmpDir := t.TempDir()
+	pngData := []byte{
+		0x89, 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A, // PNG header
+		0x00, 0x00, 0x00, 0x0D, 0x49, 0x48, 0x44, 0x52, // IHDR chunk
+		0x00, 0x00, 0x00, 0x01, 0x00, 0x00, 0x00, 0x01,
+		0x08, 0x02, 0x00, 0x00, 0x00, 0x90, 0x77, 0x53,
+		0xDE, 0x00, 0x00, 0x00, 0x0C, 0x49, 0x44, 0x41, // IDAT chunk
+		0x54, 0x08, 0xD7, 0x63, 0x60, 0x60, 0x00, 0x00,
+		0x00, 0x02, 0x00, 0x01, 0xE2, 0x21, 0xBC, 0x33, // IEND chunk
+		0x00, 0x00, 0x00, 0x00, 0x49, 0x45, 0x4E, 0x44,
+		0xAE, 0x42, 0x60, 0x82,
+	}
+	pngPath := tmpDir + "/test.png"
+	if err := os.WriteFile(pngPath, pngData, 0o644); err != nil {
+		t.Fatal(err)
+	}
+	badPath := tmpDir + "/corrupt.png"
+	if err := os.WriteFile(badPath, []byte("not an image"), 0o644); err != nil {
+		t.Fatal(err)
+	}
+
+	tests := []struct {
+		name      string
+		input     string
+		wantText  string // expected output text
+		wantImage int    // expected number of images loaded
+		wantErr   bool
+	}{
+		{
+			name:      "@-prefixed path loads image and strips text",
+			input:     "describe @" + pngPath,
+			wantText:  "describe",
+			wantImage: 1,
+		},
+		{
+			name:      "bare absolute path loads image and keeps text",
+			input:     "check " + pngPath + " for details",
+			wantText:  "check " + pngPath + " for details",
+			wantImage: 1,
+		},
+		{
+			name:      "leading bare absolute path loads image and strips text",
+			input:     pngPath + " describe it",
+			wantText:  "describe it",
+			wantImage: 1,
+		},
+		{
+			name:      "leading bare absolute path alone leaves empty text",
+			input:     pngPath,
+			wantText:  "",
+			wantImage: 1,
+		},
+		{
+			name:      "leading bare corrupt path is consumed with error",
+			input:     badPath + " explain",
+			wantText:  "explain",
+			wantImage: 0,
+			wantErr:   true,
+		},
+		{
+			name:      "bare path with corrupt image skips silently",
+			input:     "see " + badPath,
+			wantText:  "see " + badPath,
+			wantImage: 0,
+			wantErr:   false,
+		},
+		{
+			name:      "non-existent bare path is left as-is",
+			input:     "missing /nonexistent/image.png file",
+			wantText:  "missing /nonexistent/image.png file",
+			wantImage: 0,
+		},
+		{
+			// The error aborts the send, but the text comes back with it: nothing
+			// was consumed before the failure, so a caller that has to send
+			// something anyway sends what the user wrote rather than an empty turn.
+			name:      "@ with corrupt image returns error and the untouched text",
+			input:     "@" + badPath,
+			wantText:  "@" + badPath,
+			wantImage: 0,
+			wantErr:   true,
+		},
+		{
+			// What survived: the reference that did load is consumed, so the text
+			// no longer names an image the caller is also attaching.
+			name:      "@ failure after a good one returns the surviving text",
+			input:     "@" + pngPath + " and @" + badPath,
+			wantText:  "and @" + badPath,
+			wantImage: 1,
+			wantErr:   true,
+		},
+		{
+			name:      "no image references",
+			input:     "just text no images",
+			wantText:  "just text no images",
+			wantImage: 0,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got, images, err := ProcessImageRefs(tmpDir, tt.input)
+			if tt.wantErr && err == nil {
+				t.Fatal("expected error, got nil")
+			}
+			if !tt.wantErr && err != nil {
+				t.Fatalf("unexpected error: %v", err)
+			}
+			if got != tt.wantText {
+				t.Errorf("ProcessImageRefs() text = %q, want %q", got, tt.wantText)
+			}
+			if len(images) != tt.wantImage {
+				t.Errorf("ProcessImageRefs() got %d images, want %d", len(images), tt.wantImage)
+			}
+		})
+	}
+}
+
+func TestLeadingImagePath(t *testing.T) {
+	tmpDir := t.TempDir()
+	pngPath := tmpDir + "/photo.png"
+	if err := os.WriteFile(pngPath, []byte("anything"), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	subDir := tmpDir + "/sub"
+	if err := os.Mkdir(subDir, 0o755); err != nil {
+		t.Fatal(err)
+	}
+	relPath := "sub/photo.png"
+	if err := os.WriteFile(subDir+"/photo.png", []byte("anything"), 0o644); err != nil {
+		t.Fatal(err)
+	}
+
+	tests := []struct {
+		name  string
+		cwd   string
+		input string
+		want  string
+	}{
+		{
+			name:  "absolute existing image path first",
+			cwd:   tmpDir,
+			input: pngPath + " describe it",
+			want:  pngPath,
+		},
+		{
+			name:  "absolute existing image path alone",
+			cwd:   tmpDir,
+			input: pngPath,
+			want:  pngPath,
+		},
+		{
+			name:  "relative existing image path first",
+			cwd:   tmpDir,
+			input: relPath + " explain",
+			want:  relPath,
+		},
+		{
+			name:  "leading whitespace is ignored",
+			cwd:   tmpDir,
+			input: "  " + pngPath + " hi",
+			want:  pngPath,
+		},
+		{
+			name:  "path mid-sentence is not leading",
+			cwd:   tmpDir,
+			input: "check " + pngPath + " for details",
+			want:  "",
+		},
+		{
+			name:  "non-existent absolute path",
+			cwd:   tmpDir,
+			input: "/nonexistent/photo.png explain",
+			want:  "",
+		},
+		{
+			name:  "trailing punctuation disqualifies the token",
+			cwd:   tmpDir,
+			input: pngPath + ", what is this",
+			want:  "",
+		},
+		{
+			name:  "bare filename is not a path",
+			cwd:   tmpDir,
+			input: "photo.png describe",
+			want:  "",
+		},
+		{
+			name:  "plain text",
+			cwd:   tmpDir,
+			input: "just some words",
+			want:  "",
+		},
+		{
+			name:  "empty input",
+			cwd:   tmpDir,
+			input: "   ",
+			want:  "",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := LeadingImagePath(tt.cwd, tt.input); got != tt.want {
+				t.Errorf("LeadingImagePath(%q, %q) = %q, want %q", tt.cwd, tt.input, got, tt.want)
 			}
 		})
 	}

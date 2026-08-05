@@ -67,15 +67,62 @@ func Load(path string) (core.Image, error) {
 		return core.Image{}, fmt.Errorf("file is not a valid image")
 	}
 
-	return newImage(mediaType, filepath.Base(absPath), data), nil
+	return newImage(mediaType, filepath.Base(absPath), absPath, data), nil
 }
 
 // newImage builds a core.Image from raw bytes, base64-encoding the data.
-func newImage(mediaType, fileName string, data []byte) core.Image {
+func newImage(mediaType, fileName, path string, data []byte) core.Image {
 	return core.Image{
 		MediaType: mediaType,
 		Data:      base64.StdEncoding.EncodeToString(data),
 		FileName:  fileName,
+		Path:      path,
 		Size:      len(data),
+	}
+}
+
+// EnsureFilePath returns a filesystem path for an image, writing the file when
+// the image doesn't have one — so a tool handed the path (an MCP image
+// describer, say) can always open it. An image loaded from disk keeps its own
+// path and temp is false. A clipboard paste has no backing file, so its bytes
+// go to a temp file and temp is true: that one belongs to the caller, who must
+// os.Remove it once the model is done with it.
+func EnsureFilePath(img core.Image) (path string, temp bool, err error) {
+	if img.Path != "" {
+		return img.Path, false, nil
+	}
+	if img.Data == "" {
+		return "", false, fmt.Errorf("image %s has neither a path nor data", img.FileName)
+	}
+	data, err := base64.StdEncoding.DecodeString(img.Data)
+	if err != nil {
+		return "", false, fmt.Errorf("decoding image data: %w", err)
+	}
+	f, err := os.CreateTemp("", "san-image-*"+extForMediaType(img.MediaType))
+	if err != nil {
+		return "", false, err
+	}
+	defer f.Close()
+	if _, err := f.Write(data); err != nil {
+		os.Remove(f.Name())
+		return "", false, err
+	}
+	return f.Name(), true, nil
+}
+
+// extForMediaType picks the file extension a temp image should carry. It does
+// not reverse supportedTypes: two extensions map to image/jpeg there, and Go
+// randomises map iteration, so the same image would land on .jpg or .jpeg from
+// run to run.
+func extForMediaType(mediaType string) string {
+	switch mediaType {
+	case "image/jpeg":
+		return ".jpg"
+	case "image/webp":
+		return ".webp"
+	case "image/gif":
+		return ".gif"
+	default:
+		return ".png"
 	}
 }

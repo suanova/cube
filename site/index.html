@@ -3,10 +3,10 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Cube — Fast, open agent harness for the terminal</title>
-<meta name="description" content="Cube is a fast, open terminal agent harness: one ~12 MB Go binary connecting models, tools, permissions, memory, persona bundles, skills, plugins, MCP, and subagents.">
-<meta property="og:title" content="Cube — Fast, open agent harness for the terminal">
-<meta property="og:description" content="One small Go binary. Bring any model and extension; Cube gives them a fast, inspectable agent loop in your terminal.">
+<title>Cube — Minimal overhead. Maximum agent.</title>
+<meta name="description" content="Cube is an open-source terminal agent runtime: one 12 MB Go binary, ~2.3k tokens of harness, no Node.js or Python. Prompt, tools, providers and extensions all stay yours to change.">
+<meta property="og:title" content="Cube — Minimal overhead. Maximum agent.">
+<meta property="og:description" content="Small context, native speed, open all the way down. An open-source terminal agent runtime in one 12 MB Go binary.">
 <meta property="og:type" content="website">
 <meta property="og:url" content="https://genai-io.github.io/san/">
 <meta property="og:image" content="https://genai-io.github.io/san/san.png">
@@ -23,13 +23,12 @@
     <span class="logo"><a href="#top">&lt; SAN <span class="spark">✦</span> /&gt;</a></span>
     <button class="nav-toggle" aria-label="Toggle menu" aria-expanded="false" onclick="toggleNav(this)">≡</button>
     <div class="nav-links" id="nav-links">
-      <a href="#features">Features</a>
-      <a href="#deploy">Deploy</a>
-      <a href="#footprint">Footprint</a>
+      <a href="#why">Why</a>
+      <a href="#benchmark">Benchmark</a>
       <a href="#community">Community</a>
       <span class="nav-sep" aria-hidden="true"></span>
       <a href="intro.html">Intro</a>
-      <a href="getting-started.html">Get Started</a>
+      <a href="getting-started.html">Start</a>
       <a href="docs.html">Docs</a>
       <span class="lang-switch">
         <button class="lang-btn" id="lang-btn" aria-haspopup="listbox" aria-expanded="false">
@@ -38,7 +37,7 @@
         </button>
         <div class="lang-menu" id="lang-menu" role="listbox"></div>
       </span>
-      <a class="nav-cta" href="https://github.com/suanova/cube">★ Star on GitHub</a>
+      <a class="nav-cta" href="https://github.com/suanova/cube">★ GitHub</a>
     </div>
   </div>
 </nav>
@@ -46,9 +45,15 @@
 <header class="hero" id="top">
   <div class="wrap">
     <div class="hero-head">
-      <span class="kicker load-up d1">Open-source agent harness · Apache-2.0</span>
-      <h1 class="load-up d2">Cube — the open harness<br>for <span class="grad">terminal agents</span></h1>
-      <p class="sub load-up d3">One small Go binary — a fast, open harness that runs any model and extension in an inspectable, permission-gated loop.</p>
+      <span class="kicker load-up d1">Open source · Apache-2.0</span>
+      <h1 class="load-up d2">Minimal overhead.<br>Maximum <em>agent</em>.</h1>
+      <p class="sub load-up d3">Cube is an open-source terminal agent runtime: one native Go binary, no Node.js or Python. Everything the model touches — prompt, tools, providers, extensions — stays yours to change.</p>
+      <div class="metrics load-up d4">
+        <span><b>~0.01s</b> cold start</span>
+        <span><b>~12 MB</b> binary</span>
+        <span><b>~2.3k</b> tokens of harness</span>
+        <span><b>zero</b> runtime deps</span>
+      </div>
     </div>
 
     <div class="screen-frame load-up d4">

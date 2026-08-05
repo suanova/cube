@@ -1,5 +1,33 @@
 # Upstream Sync Changelog
 
+## 2026-08-05 — 24 commits from san#main
+
+| SHA | Intent | Type | Risk |
+|-----|--------|------|------|
+| `c1578bf085a7` | Fix persona selector metadata truncation width to prevent rows from overflowing the panel | bugfix | low |
+| `d896ee854097` | Restructure README documentation around three core value pillars (small, fast, open) with measured benchmarks, replacing flat feature lists with quantified performance claims | internal | low |
+| `ca1fa7140778` | Fix composer cursor misalignment on wrapped or multi-line input by indenting all rows after the first to match the prompt width | bugfix | low |
+| `bf96ef64c792` | Expand @ autocomplete to show all file types and respect .gitignore patterns while increasing scan limits for deeper project trees | feature | medium |
+| `2ec655daa7cf` | Extend ProcessImageRefs to also detect bare image file paths (e.g., from drag-drop into the terminal) in addition to @-prefixed references, with more lenient semantics for bare paths (text preserved, failed loads silently skipped). | feature | medium |
+| `0c8a6ea72f8c` | Rebuild the documentation site homepage and design system to match the README's updated positioning ('Minimal overhead. Maximum agent.'), including a scripted terminal demo, trigram-based 'Why San' section, and intro.html scaling fixes. | refactor | low |
+| `d57c2b9ff4a7` | Update GitHub Actions checkout action from a pinned SHA (v7.0.0) to the v4 tag in the release-bot workflow | internal | low |
+| `4132b6ec606a` | Strip image attachments from conversation history when seeding agent messages for text-only models, preventing providers from rejecting replayed image_url parts after a model switch | bugfix | medium |
+| `f07c90601a8a` | Fix cancel (Esc) to actually stop the agent loop: re-check ctx between sequential tool calls, hold turn-queue drains on StopCancelled, and clear interruptPending on new user messages. | bugfix | medium |
+| `708461a0aa49` | Release version 1.22.1 with changelog updates documenting new features, changes, and fixes since v1.22.0 | internal | low |
+| `ac820629dd11` | Keep the assistant's streamed text visible above docked permission modals and freeze animated indicators (tool spinners, assistant bullets, agent rows) while the modal awaits user input | bugfix | medium |
+| `19bcffb8fdad` | Deliver background task results into a running conversation as soon as it is safe to append, instead of parking them until the turn boundary, and rename conv.Runtime members by origin (On*/Handle*/verb) for clarity. | feature | medium |
+| `e45ec0ef7e48` | Update documentation to match the actual implementation: correct the prompt slot table, permission mode table, and dead source file references | internal | low |
+| `ff91421a0af2` | Bump actions/stale GitHub Action from v10.4.0 to v11.0.0 in the stale workflow | internal | low |
+| `17c9402f9e9b` | Bump actions/checkout from v4 to v7 in GitHub Actions workflows, updating pinned SHAs to v7.0.1 in ci.yml and the major version tag in release-bot.yml. | internal | low |
+| `9d9b4d7d1a6d` | Fix agent behavior prompt to prevent premature stopping by adding explicit persistence instruction and narrowing the scope of the 'recommend don't implement' guidance to only open-ended exploratory questions | bugfix | low |
+| `ab6833ed0dec` | Fix TUI rendering bug where full-width separator rows caused orphaned rule rows above the composer after terminal resize by making separators one column short to avoid deferred-wrap state ambiguity | bugfix | low |
+| `85ec4b86e12b` | Report tool calls waiting on permission prompts as waiting rather than running, by carrying the tool call ID through the permission gate and using it to distinguish gated calls from executing ones in the render path. | bugfix | medium |
+| `01ce7256b641` | Fix a security bypass where a PreToolUse hook's 'allow' decision skipped the permission gate entirely, by wiring in Settings.ResolveHookAllow so hook allows are vetted against deny rules, circuit breaker, confirmation tiers, and ask rules. | bugfix | medium |
+| `fe74e72b77ae` | Allow text-only models to receive image paths inline instead of blocking image-bearing messages, while fixing slash-command misdetection of leading image paths and correcting DeepSeek thinking-effort options | feature | medium |
+| `c6bd60a3fbd0` | Fix clipboard image temp files being deleted at turn end (breaking follow-up turns that reference the inlined path), honor ProcessImageRefs' error contract by returning surviving text/images on failure, and make image extension selection deterministic. | bugfix | medium |
+| `861f28833c53` | Fix resumed sessions demoting permission mode to normal and enable shift+tab mode cycling during active turns, with thread-safe posture reads | bugfix | medium |
+| `d7647f94cfad` | Fix TUI renderer to prevent orphan rows after terminal resize by correcting row count calculations for rewrapped content and restoring one-column separator slack | bugfix | medium |
+| `58fafbb63cfe` | Remove the GitHub Actions stale workflow in favor of using san-ci to manage stale issues and PRs | internal | low |
 ## 2026-07-31 — 10 commits from san#main
 
 | SHA | Intent | Type | Risk |

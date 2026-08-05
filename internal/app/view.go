@@ -51,17 +51,42 @@ func (m *model) viewString() (string, *tea.Cursor) {
 		return ov.Render(), nil // fullscreen slash-command picker
 	}
 
-	separator := conv.SeparatorStyle.Render(strings.Repeat("─", m.env.Width))
+	// One column short of the terminal, deliberately. Writing the last column
+	// leaves the terminal owing a line break rather than having taken one, and
+	// how it settles that debt against the line feed that follows is not
+	// something the renderer can predict. Only a full redraw rewrites an
+	// unchanged rule, so the debt is settled on resize and nowhere else, which
+	// is exactly when a miscount strands a row above the composer. The
+	// separators are the only rows in the live view that ever reach the last
+	// column. The other half of that miscount — the rows a narrowing terminal
+	// rewraps — is corrected in the Bubble Tea replacement pinned in go.mod.
+	separator := conv.SeparatorStyle.Render(strings.Repeat("─", max(1, m.env.Width-1)))
 	trackerView := m.renderTrackerList()
 
 	if hasOverlay { // docked modal (Question / Approval)
-		trackerPrefix := ""
-		if trackerView != "" {
-			trackerPrefix = "\n" + strings.TrimSuffix(trackerView, "\n") + "\n"
-		}
-		return trackerPrefix + separator + "\n" + ov.Render(), nil
+		return m.renderDockedModalView(ov, separator, trackerView), nil
 	}
 	return m.renderNormalView(separator, trackerView)
+}
+
+// renderDockedModalView composes a docked modal with the live chat tail still
+// visible above it. The assistant text that streams in right before a tool call
+// is the rationale for the permission being requested, so dropping it while the
+// modal is up hides the reasoning at exactly the moment the user has to act on
+// it.
+//
+// The modal claims its rows first and the chat tail gets what is left: rendering
+// the tail unbounded would push the modal's answer options off the bottom of the
+// screen, which is worse than showing no text at all.
+func (m *model) renderDockedModalView(ov overlayPanel, separator, trackerView string) string {
+	modal := "\n" + separator + "\n" + ov.Render()
+
+	params := m.messageRenderParams()
+	// Only this branch renders under a modal, so it is the one place that knows
+	// the turn is parked on an answer — everything animated holds still.
+	params.DockedModalActive = true
+
+	return m.chatTailAbove(modal, params, trackerView) + modal
 }
 
 // isDockedModal reports whether the active overlay docks above the input area
@@ -87,19 +112,30 @@ func isDockedModal(ov overlayPanel) bool {
 // shown and earlier lines scroll off — the full message lands in native
 // scrollback at turn end, which the terminal scrolls back through natively.
 func (m *model) renderNormalView(separator, trackerView string) (string, *tea.Cursor) {
-	// Render the footer first so we can measure how many lines it consumes
-	// and cap the chat section to the remaining terminal height.
+	// Render the footer first so the chat section can be capped to whatever
+	// height it leaves free.
 	footer, inputRow := m.renderFooter(separator)
-	// A non-positive result means the footer already fills the screen; tailLines
-	// reads that as "no room" and drops the chat section entirely.
-	maxContentHeight := m.env.Height - strings.Count(footer, "\n")
-
-	activeContent := conv.RenderActiveContent(m.messageRenderParams())
-	chatSection := tailLines(m.renderChatSection(activeContent, trackerView), maxContentHeight)
+	chatSection := m.chatTailAbove(footer, m.messageRenderParams(), trackerView)
 
 	// The footer's row offsets are relative to its own first line; the chat
 	// section above it shifts them all down.
 	return chatSection + footer, m.inputCursor(strings.Count(chatSection, "\n") + inputRow)
+}
+
+// chatTailAbove renders the live chat tail to fill the rows the bottom-anchored
+// block leaves free — the footer in the normal layout, the modal in the docked
+// one. Both layouts anchor to the bottom of the screen, so this is the single
+// place the height budget is decided: the tail is capped to what is left, and
+// its earliest lines are the ones that scroll off.
+func (m *model) chatTailAbove(bottom string, params conv.RenderContext, trackerView string) string {
+	// A non-positive budget means the bottom block is taller than the screen on
+	// its own. tailLines would drop the tail anyway; bailing here skips the
+	// render that produced it, which is the whole cost on a short terminal.
+	maxContentHeight := m.env.Height - strings.Count(bottom, "\n")
+	if maxContentHeight <= 0 {
+		return ""
+	}
+	return tailLines(m.renderChatSection(conv.RenderActiveContent(params), trackerView), maxContentHeight)
 }
 
 // inputCursor returns where the terminal cursor belongs inside the composer.
@@ -173,7 +209,26 @@ func (m model) renderInputView() string {
 		!m.conv.Stream.Active && !m.userInput.Suggestions.IsVisible() {
 		return prompt + ghostTextStyle.Render(m.userInput.PromptSuggestion.Text)
 	}
-	return prompt + m.userInput.RenderTextarea()
+	return prompt + hangComposerRows(m.userInput.RenderTextarea())
+}
+
+// hangComposerRows indents every composer row after the first by the prompt's
+// width, so wrapped and newline-split input hangs under the first row's text
+// instead of falling back to column 0. Two reasons it has to: a committed user
+// message renders the same way in scrollback (RenderUserMessage joins the
+// prompt and the body side by side), and inputCursor shifts the cursor right by
+// that same prompt width on *every* row — without the indent the cursor sits
+// two columns past the character it should precede on every line but the first.
+func hangComposerRows(view string) string {
+	lines := strings.Split(view, "\n")
+	if len(lines) < 2 {
+		return view
+	}
+	gutter := strings.Repeat(" ", lipgloss.Width(conv.InputPrompt))
+	for i := 1; i < len(lines); i++ {
+		lines[i] = gutter + lines[i]
+	}
+	return strings.Join(lines, "\n")
 }
 
 // renderChatSection assembles the active chat content (uncommitted messages,
@@ -332,12 +387,13 @@ func (m model) messageRenderParams() conv.RenderContext {
 		InlinedResults: conv.PrecomputeInlinedResults(m.conv.Messages, m.conv.CommittedCount),
 
 		// Streaming + tool execution
-		StreamActive:  m.conv.Stream.Active,
-		BuildingTool:  m.conv.Stream.BuildingTool,
-		PendingCalls:  m.conv.Tool.PendingCalls,
-		CurrentIdx:    m.conv.Tool.CurrentIdx,
-		ToolStartedAt: m.conv.Tool.StartedAt,
-		ToolProgress:  m.conv.Tool.Progress,
+		StreamActive:       m.conv.Stream.Active,
+		BuildingTool:       m.conv.Stream.BuildingTool,
+		PendingCalls:       m.conv.Tool.PendingCalls,
+		CurrentIdx:         m.conv.Tool.CurrentIdx,
+		ToolStartedAt:      m.conv.Tool.StartedAt,
+		ToolProgress:       m.conv.Tool.Progress,
+		AwaitingApprovalID: m.conv.Tool.AwaitingApprovalID,
 
 		// Renderer env
 		Width:      m.env.Width,
@@ -355,8 +411,8 @@ func (m model) messageRenderParams() conv.RenderContext {
 		TaskActivity: m.conv.TaskActivity,
 		TaskOwnerMap: buildTaskOwnerMap(m.services.Tracker.List()),
 
-		// Modal interlock
-		InteractivePromptActive: m.conv.Modal.Question != nil && m.conv.Modal.Question.IsActive(),
+		// Modal interlock is left false here and set by
+		// renderDockedModalView, the only caller rendering under a modal.
 	}
 }
 

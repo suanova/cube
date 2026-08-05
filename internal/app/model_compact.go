@@ -21,9 +21,12 @@ import (
 
 func (m *model) BuildCompactRequest(focus, trigger string) conv.CompactRequest {
 	return conv.CompactRequest{
-		Ctx:          context.Background(),
-		Client:       m.buildLLMClient(),
-		Messages:     m.conv.ConvertToProvider(),
+		Ctx:    context.Background(),
+		Client: m.buildLLMClient(),
+		// Summarization runs on the active model, so the chain has to clear the
+		// same bar as an agent turn: a text-only provider rejects image parts,
+		// and the conversation keeps images even when the model can't read them.
+		Messages:     m.dropImagesTextOnlyModelRejects(m.conv.ConvertToProvider()),
 		SummaryFocus: focus,
 		HookEngine:   m.services.Hook,
 		Trigger:      trigger,
@@ -107,13 +110,13 @@ func (m *model) OnCompacted(info core.CompactInfo) tea.Cmd {
 	return tea.Batch(scrollPart, m.ContinueOutbox(), kit.StatusTimer(3*time.Second, token))
 }
 
-// OnCompactResult applies a manual /compact result. It does not reset the UI
+// HandleCompactResult applies a manual /compact result. It does not reset the UI
 // itself: it asks the running agent to compact in place (which records the
 // summary + boundary and emits CompactEvent), and that event drives
 // OnCompacted — the same path auto-compaction takes, with no agent rebuild.
 // Only when there is no active agent does it drive OnCompacted directly so the
 // next session start still seeds the summary.
-func (m *model) OnCompactResult(msg conv.CompactResultMsg) tea.Cmd {
+func (m *model) HandleCompactResult(msg conv.CompactResultMsg) tea.Cmd {
 	if msg.Err != nil {
 		m.conv.Compact.Complete(fmt.Sprintf("Compaction could not be completed: %v", msg.Err), true)
 		return tea.Batch(m.CommitMessages()...)
@@ -133,7 +136,7 @@ func (m *model) OnCompactResult(msg conv.CompactResultMsg) tea.Cmd {
 	})
 }
 
-func (m *model) OnTokenLimitResult(msg kit.TokenLimitResultMsg) tea.Cmd {
+func (m *model) HandleTokenLimitResult(msg kit.TokenLimitResultMsg) tea.Cmd {
 	m.userInput.Provider.FetchingLimits = false
 	var content string
 	if msg.Err != nil {
