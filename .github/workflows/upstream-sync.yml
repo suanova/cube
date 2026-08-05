@@ -18,6 +18,8 @@ jobs:
       pull-requests: write
     steps:
       - uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.PAT_TOKEN }}
 
       - uses: suanova/upstream-semantic-sync@v1
         id: sync
@@ -25,11 +27,13 @@ jobs:
           anthropic_auth_token: ${{ secrets.ANTHROPIC_AUTH_TOKEN }}
           anthropic_base_url: ${{ secrets.ANTHROPIC_BASE_URL }}
           model: ${{ secrets.ANTHROPIC_MODEL }}
-          github_token: ${{ github.token }}
+          github_token: ${{ secrets.PAT_TOKEN }}
           upstream_repo: 'https://github.com/genai-io/san'
           upstream_branch: 'main'
           max_risk: 'medium'
           verbose: 'true'
+        env:
+          GITHUB_TOKEN: ${{ secrets.PAT_TOKEN }}
 
       - name: Upload sync artifacts
         if: always()
