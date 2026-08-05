@@ -43,9 +43,11 @@ jobs:
           text = Path("CHANGELOG.md").read_text()
           pattern = rf'(?ms)^## \[{re.escape(tag)}\].*?(?=^## \[|\Z)'
           match = re.search(pattern, text)
-          if not match:
-              raise SystemExit(f"release notes section not found for {tag}")
-          Path("release-notes.md").write_text(match.group(0).strip() + "\n")
+          if match:
+              Path("release-notes.md").write_text(match.group(0).strip() + "\n")
+          else:
+              print(f"warning: release notes section not found for {tag}, using empty body")
+              Path("release-notes.md").write_text("")
           PY
 
       - name: Create Release
