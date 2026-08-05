@@ -1,6 +1,6 @@
 <div align="center">
   <h1>&lt; CUBE ✦ /&gt;</h1>
-  <p><strong>Minimal harness. Maximum agent.</strong></p>
+  <p><strong>Minimal overhead. Maximum agent.</strong></p>
   <p>Small context, native speed, open all the way down.</p>
   <p>
     <a href="https://github.com/suanova/cube/releases"><img src="https://img.shields.io/github/v/release/suanova/cube?style=flat-square" alt="Release"></a>
@@ -40,7 +40,7 @@ Three properties, and Cube refuses to trade any one of them for the others.
 
 **Open** — plug in models, skills, subagents, and MCP servers; write your own system prompt, autopilot goals, and self-learning strategy; replay any run in `cube inspector`.
 
-**A minimal harness, not a minimal agent.**
+**Minimal overhead, not a minimal agent.**
 
 <sub>*Cube continues san, whose name is **San**, written **三** ("three") and drawn **☰**. From the Dao De Jing, 三生万物 — "three begets the ten-thousand things": one runtime that becomes any agent, running a three-step loop (reason → act → observe). The command is `cube`.*</sub>
 

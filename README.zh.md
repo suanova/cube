@@ -1,6 +1,6 @@
 <div align="center">
   <h1>&lt; CUBE ✦ /&gt;</h1>
-  <p><strong>框架最小，Agent 最强。</strong></p>
+  <p><strong>开销最小，Agent 最强。</strong></p>
   <p>上下文精简，原生性能，从里到外都开放。</p>
   <p>
     <a href="https://github.com/suanova/cube/releases"><img src="https://img.shields.io/github/v/release/suanova/cube?style=flat-square" alt="Release"></a>
@@ -35,7 +35,7 @@ Cube 是一个开源的终端 Agent 运行时：一个原生 Go 二进制，不�
 
 **开** —— 模型、skills、subagents、MCP servers，想接就接；system prompt、Autopilot 的目标、自我学习的策略，都由你来写；`cube inspector` 回放任意一次运行。
 
-**小的是框架，不是 Agent 的能力。**
+**小的是开销，不是 Agent 的能力。**
 
 <sub>*Cube 延续自 san，其名 **San**，即 **三**，符号取自 **☰**。语出《道德经》「三生万物」—— 一个运行时即可化身为任意 Agent，并以三步循环运转（推理 → 行动 → 观察）。命令为 `cube`。*</sub>
 
