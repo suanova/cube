@@ -337,11 +337,15 @@ def main():
     print(f"Updated cmd/cube/main.go -> version {next_version}")
 
     # 10. Commit, push, create PR
-    run(["git", "config", "user.name", "cube-release-bot[bot]"])
-    run(["git", "config", "user.email", "cube-release-bot@suanova.users.github.com"])
+    # Commit as github-actions[bot] — the same identity that pushes the
+    # branch via GITHUB_TOKEN. DCO skips bot-authored commits, and its
+    # noreply email maps to a real account, so no human identity is
+    # involved. -s keeps a Signed-off-by trailer for good measure.
+    run(["git", "config", "user.name", "github-actions[bot]"])
+    run(["git", "config", "user.email", "41898282+github-actions[bot]@users.noreply.github.com"])
     run(["git", "checkout", "-b", branch])
     run(["git", "add", "CHANGELOG.md", "cmd/cube/main.go"])
-    run(["git", "commit", "-m", f"chore: bump version to {next_version}"])
+    run(["git", "commit", "-s", "-m", f"chore: bump version to {next_version}"])
     run(["git", "push", "origin", branch])
 
     body = (
