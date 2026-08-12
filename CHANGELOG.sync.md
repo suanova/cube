@@ -1,5 +1,14 @@
 # Upstream Sync Changelog
 
+## 2026-08-12 — 5 commits from san#main
+
+| SHA | Intent | Type | Risk |
+|-----|--------|------|------|
+| `6e1ef7e0e418` | Fix release bot failing to find merged PRs: handle trailing 'Z' in ISO dates on Python <3.11 and read merged_at from the nested pull_request object in GitHub search API results (top-level merged_at is always null). | bugfix | low |
+| `d6ddf9238773` | Adds GitHub Copilot as a subscription-backed LLM provider: GitHub device-flow OAuth yields a long-lived token exchanged for a short-lived Copilot bearer that drives an OpenAI-compatible chat endpoint, with device-code sign-in UX in the /models selector and supporting fixes to credential retention, spinner/code placement, and shared helpers. | feature | medium |
+| `4f1065119eb9` | Add a /context TUI slash command that renders a stacked bar and per-category breakdown of what fills the context window (system prompt, tools, MCP tools, skills, memory, messages), using the provider's measured prompt size as the total, an exact system+tools count derived from Anthropic's prompt-cache prefix when applicable (with 2x disagreement fallback), and a BPE pre-token-run-based estimator for the remaining split. | feature | medium |
+| `0a3d02162a67` | Make the release bot commit as github-actions[bot] and add a Signed-off-by trailer (-s) so release PRs pass the DCO check. | internal | low |
+| `219824a41f2d` | Release chore: bump version from 1.22.2 to 1.22.3 and add a CHANGELOG entry summarizing previously-merged PRs (new /context command, GitHub Copilot provider, CI/release-bot fixes); no functional code changes. | internal | low |
 ## 2026-08-05 — 24 commits from san#main
 
 | SHA | Intent | Type | Risk |
