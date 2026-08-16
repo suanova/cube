@@ -70,6 +70,13 @@ Three properties, and Cube refuses to trade any one of them for the others.
 
 ## Installation
 
+**Homebrew (macOS / Linux)**
+
+```bash
+brew tap suanova/cube
+brew install cube
+```
+
 **macOS / Linux**
 
 ```bash
@@ -82,7 +89,7 @@ curl -fsSL https://raw.githubusercontent.com/suanova/cube/main/install.sh | bash
 irm https://raw.githubusercontent.com/suanova/cube/main/install.ps1 | iex
 ```
 
-Start with `cube`. On first launch, choose a model and add its API key when prompted. To update later, run `cube update`.
+Start with `cube`. On first launch, choose a model and add its API key when prompted. To update later, run `cube update` — or `brew upgrade cube` if you installed via Homebrew.
 
 <details>
 <summary><b>Other methods</b></summary>

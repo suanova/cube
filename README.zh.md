@@ -59,6 +59,13 @@ Cube 是一个开源的终端 Agent 运行时：一个原生 Go 二进制，不�
 
 ## 安装
 
+**Homebrew (macOS / Linux)**
+
+```bash
+brew tap suanova/cube
+brew install cube
+```
+
 **macOS / Linux**
 
 ```bash
@@ -71,7 +78,7 @@ curl -fsSL https://raw.githubusercontent.com/suanova/cube/main/install.sh | bash
 irm https://raw.githubusercontent.com/suanova/cube/main/install.ps1 | iex
 ```
 
-升级直接重新执行同样的命令。
+升级直接重新执行同样的命令;通过 Homebrew 安装的用 `brew upgrade cube`。
 
 <details>
 <summary><b>其他方式</b></summary>
