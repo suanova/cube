@@ -1,5 +1,12 @@
 # Upstream Sync Changelog
 
+## 2026-08-16 — 3 commits from san#main
+
+| SHA | Intent | Type | Risk |
+|-----|--------|------|------|
+| `f24509c68031` | Rename the bypass-permissions mode's user-facing display to 'YOLO mode' with a dedicated violet theme color, add an opt-out /config › permissions panel (allowBypass) that gates YOLO out of the shift+tab cycle and demotes active sessions, unify status-line noun-phrase labels and fold thinking effort into the model name — while leaving protocol/config values (bypassPermissions, allowBypass) unchanged and accepting 'yolo' as an input alias for compatibility. | feature | medium |
+| `58e4267c9f79` | Document Homebrew as a new installation/upgrade path (brew tap genai-io/san && brew install san) across English/Chinese READMEs and the getting-started guide; docs-only, no code changes. | internal | low |
+| `93e0e0637b37` | Corrects DeepSeek model catalog pricing (4x-overstated V4 Pro rates and cache-hit rates charged at cache-miss rates) and changes the default thinking effort from "off" to "high" to match the DeepSeek API's own default. | bugfix | medium |
 ## 2026-08-12 — 5 commits from san#main
 
 | SHA | Intent | Type | Risk |
