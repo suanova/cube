@@ -97,9 +97,9 @@ func TestPermissionsPanelReallowPersistsTrue(t *testing.T) {
 // the popup open, leaves the baseline untouched, and shows the error inline.
 func TestPermissionsPanelSaveFailureSurfacesError(t *testing.T) {
 	home := tempHome(t)
-	// Block the write: a regular file where the .san dir must be makes the
+	// Block the write: a regular file where the .cube dir must be makes the
 	// loader's MkdirAll fail.
-	if err := os.WriteFile(filepath.Join(home, ".san"), []byte("x"), 0o644); err != nil {
+	if err := os.WriteFile(filepath.Join(home, ".cube"), []byte("x"), 0o644); err != nil {
 		t.Fatal(err)
 	}
 
@@ -138,7 +138,7 @@ func tempHome(t *testing.T) string {
 // settings file the panel writes to. A nil return means the field is absent.
 func readPersistedAllowBypass(t *testing.T, home string) *bool {
 	t.Helper()
-	raw, err := os.ReadFile(filepath.Join(home, ".san", "settings.json"))
+	raw, err := os.ReadFile(filepath.Join(home, ".cube", "settings.json"))
 	if err != nil {
 		t.Fatalf("settings file not written: %v", err)
 	}
