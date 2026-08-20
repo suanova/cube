@@ -13,6 +13,9 @@ Re-run the same command to upgrade. To uninstall, append `-s uninstall`.
 Alternatives:
 
 ```bash
+# via Homebrew
+brew tap suanova/cube && brew install cube
+
 # via Go toolchain
 go install github.com/genai-io/san/cmd/cube@latest
 
