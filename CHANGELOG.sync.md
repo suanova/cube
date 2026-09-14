@@ -1,5 +1,15 @@
 # Upstream Sync Changelog
 
+## 2026-09-14 — 6 commits from san#main
+
+| SHA | Intent | Type | Risk |
+|-----|--------|------|------|
+| `84528e211ff2` | Fix the release bot to compute the current version as the max of the latest git tag and the version in cmd/san/main.go, and skip versions/PRs already recorded in the CHANGELOG, preventing re-creation of already-merged release PRs when a tag push lags. | bugfix | low |
+| `981c9b44d165` | Automated release version bump to 1.22.4: updates the changelog with the new release notes and increments the embedded version string in main.go. | internal | low |
+| `67f8090eb8f8` | Apply the x/tools modernize analyzer across the whole tree: 92 mechanical, behavior-preserving rewrites (slices.Backward, strings.SplitSeq/FieldsSeq, maps.Copy, built-in min/max, range-over-int, strings.Cut/CutPrefix, slices.Contains(Func), reflect.TypeFor, sync.WaitGroup.Go, atomic.Uint64, interface{}->any) plus removal of 8 no-op `omitempty` JSON struct tags that encoding/json never honored on non-pointer nested structs (the intended omission behavior is deliberately NOT introduced; `omitzero` is left for a separate change). | refactor | low |
+| `9c8d3b8dd54c` | Refresh LLM model catalogs (context windows, output caps, pricing, defaults) against vendor docs and switch Claude 4.6+ to adaptive thinking, fixing 400 rejections from current Anthropic models. | bugfix | medium |
+| `49824b98a769` | Add a zero-tolerance golangci-lint gate (errcheck + ineffassign) to CI and fix all silently discarded errors it uncovered, several of which caused user-visible misbehavior. | bugfix | medium |
+| `91c5b4172fae` | Add a gating govulncheck CI job (plus weekly schedule) and Dependabot gomod tracking, and bump the Go toolchain pin to 1.25.13 along with golang.org/x/text and yuin/goldmark to eliminate all reachable vulnerabilities. | internal | low |
 ## 2026-08-16 — 3 commits from san#main
 
 | SHA | Intent | Type | Risk |

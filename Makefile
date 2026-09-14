@@ -11,8 +11,10 @@ LDFLAGS := -ldflags "-s -w -X main.version=$(VERSION) -X main.buildTime=$(BUILDT
 export CGO_ENABLED := 0
 GOFILES := $(shell find . -path './vendor' -prune -o -path './.git' -prune -o -name '*.go' -print)
 GOIMPORTS_VERSION := v0.43.0
+GOLANGCI_VERSION := v2.12.2
+GOVULNCHECK_VERSION := v1.7.0
 
-.PHONY: build build-all install clean release release-push test cover format format-check lint install-format-tools check-format-tools
+.PHONY: build build-all install clean release release-push test cover format format-check lint lint-go install-format-tools install-lint-tools check-format-tools check-lint-tools
 
 build: format
 	@mkdir -p $(BINDIR)
@@ -32,8 +34,14 @@ install: build
 install-format-tools:
 	go install golang.org/x/tools/cmd/goimports@$(GOIMPORTS_VERSION)
 
+install-lint-tools:
+	go install github.com/golangci/golangci-lint/v2/cmd/golangci-lint@$(GOLANGCI_VERSION)
+
 check-format-tools:
 	@command -v goimports >/dev/null || go install golang.org/x/tools/cmd/goimports@$(GOIMPORTS_VERSION)
+
+check-lint-tools:
+	@command -v golangci-lint >/dev/null || go install github.com/golangci/golangci-lint/v2/cmd/golangci-lint@$(GOLANGCI_VERSION)
 
 format: check-format-tools
 	@gofmt -w $(GOFILES)
@@ -56,7 +64,14 @@ format-check: check-format-tools
 lint:
 	go vet ./...
 	@$(MAKE) format-check
+	@$(MAKE) lint-go
 	@$(MAKE) lint-layers
+
+# lint-go runs the linters configured in .golangci.yml. They report defects, not
+# style, so the tree is expected to be clean — see the config for the rule on
+# adding one.
+lint-go: check-lint-tools
+	golangci-lint run --timeout 5m ./...
 
 lint-layers:
 	@go run ./tools/layercheck
@@ -88,6 +103,15 @@ ci: format-check build-all lint
 
 clean:
 	rm -rf $(BINDIR)
+
+# vulncheck reports known vulnerabilities in the dependency graph that this
+# code can actually reach. Reachability is what makes it worth gating on: an
+# advisory in a package nobody calls is not reported, so a finding here is
+# always a real exposure. CI runs the same command.
+.PHONY: vulncheck
+vulncheck:
+	@command -v govulncheck >/dev/null || go install golang.org/x/vuln/cmd/govulncheck@$(GOVULNCHECK_VERSION)
+	govulncheck ./...
 
 # Serve the website locally for testing. Opens http://localhost:8080 in the
 # default browser. Requires Python 3 (available on macOS and most Linux distros
