@@ -1,5 +1,17 @@
 # Upstream Sync Changelog
 
+## 2026-09-28 — 8 commits from san#main
+
+| SHA | Intent | Type | Risk |
+|-----|--------|------|------|
+| `84528e211ff2` | Fix the release bot so it derives the current version from the max of the latest git tag and cmd/san/main.go, skips already-changelogged versions, and drops already-listed PRs, preventing duplicate release PRs from regression. | bugfix | low |
+| `981c9b44d165` | Release version 1.22.4: bump the version constant in cmd/san/main.go and add the corresponding CHANGELOG entry documenting prior features and fixes. | internal | low |
+| `7bce5d7cb47d` | Make the weekly release bot trigger CI automatically on its release PR via workflow_dispatch (bypassing GITHUB_TOKEN approval gating), wait for CI to pass, then request review from a single designated OWNERS member (yanmxa). | internal | low |
+| `67f8090eb8f8` | Mechanically modernize Go idioms across the whole tree by applying the x/tools modernize analyzer (slices.Backward, strings SplitSeq/FieldsSeq, maps.Copy, min/max builtins, range-over-int, any, etc.) and drop misleading no-op `omitempty` tags on non-pointer struct fields — all rewrites are behavior-preserving. | refactor | low |
+| `9c8d3b8dd54c` | Fix Anthropic Claude 4.6+ adaptive thinking payloads and correct stale model catalog limits/pricing/defaults across LLM providers against vendor docs. | bugfix | medium |
+| `49824b98a769` | Add golangci-lint (errcheck + ineffassign) as a zero-tolerance CI gate and fix all previously discarded errors it exposed — false TaskCreate success on dependency failure, silently dropped tracker storage/lock setup, ignored MCP removal failures, and version --json exiting 0 after a failed encode. | bugfix | medium |
+| `91c5b4172fae` | Add reachable-vulnerability scanning (govulncheck) as a gating weekly CI job, bump the Go toolchain pin and two vulnerable modules, and have Dependabot track Go module updates | internal | low |
+| `1233c6e9f58f` | Dependabot batch bump of 11 Go module dependencies (minor/patch) with a compensating test fix that trims full-width padding in scrollback rendering assertions after ultraviolet#128 started emitting trailing blank cells as spaces. | internal | low |
 ## 2026-08-16 — 3 commits from san#main
 
 | SHA | Intent | Type | Risk |
